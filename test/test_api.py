@@ -48,7 +48,7 @@ class TestAPI(unittest.IsolatedAsyncioTestCase):
             "messages": [
                 {"role": "user", "content": "你好，请介绍一下你自己"}
             ],
-            # "model": "gpt-3.5-turbo",
+            # "model": "qwen-turbo",
             "temperature": 0.7,
             "max_tokens": 100
         }
@@ -60,8 +60,8 @@ class TestAPI(unittest.IsolatedAsyncioTestCase):
                 json=request_data
             )
             
-            # 如果API密钥未设置或OpenAI API密钥未设置，预期会失败
-            if not os.getenv("OPENAI_API_KEY"):
+            # 如果API密钥未设置或阿里云百炼API密钥未设置，预期会失败
+            if not os.getenv("QWEN_API_KEY"):
                 self.assertNotEqual(response.status_code, 200)
                 return
                 
