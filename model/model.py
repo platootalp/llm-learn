@@ -1,6 +1,9 @@
 import getpass
 import os
 from langchain_openai import ChatOpenAI
+from dotenv import load_dotenv
+
+load_dotenv()
 
 if not os.environ.get("QWEN_API_KEY"):
     os.environ["QWEN_API_KEY"] = getpass.getpass("Enter API key for Qwen: ")
@@ -13,5 +16,7 @@ model = ChatOpenAI(
 )
 
 # 进行测试
-response = model.predict("你好，介绍一下你自己")
-print(response)
+if __name__ == '__main__':
+    response = model.predict("什么是rag")
+    print(response)
+
