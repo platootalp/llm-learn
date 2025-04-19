@@ -31,6 +31,9 @@ class Settings(BaseSettings):
         "qwen-plus",
         "qwen-max"
     ]
+    
+    # 数据库配置
+    DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:///./app.db")
 
     class Config:
         case_sensitive = True
