@@ -3,12 +3,17 @@ from typing import List
 
 
 class SlidingWindow:
+    """
+        2.1 不定长滑动窗口，求最大/最长子数组
+    """
+
     # 3 Longest Substring Without Repeating Characters
     def maximumLengthSubstring(self, s: str) -> int:
         ans = left = 0
         cnt = defaultdict(int)
         for i, c in enumerate(s):
             cnt[c] += 1
+            # 不满足条件时候缩小窗口
             while cnt[c] > 2:
                 cnt[s[left]] -= 1
                 left += 1
@@ -86,6 +91,51 @@ class SlidingWindow:
             max_keep = max(max_keep, right - left + 1)
 
         return n - max_keep
+
+    """
+        2.2 不定长滑动窗口，求最短/最小子数组
+    """
+
+    # 209 Minimum Size Subarray Sum
+    def minSubArrayLen(self, target: int, nums: List[int]) -> int:
+        n = len(nums)
+        ans = n + 1
+        sum = left = 0
+        for right, num in enumerate(nums):
+            sum += nums[right]
+            # 满足条件时尽量缩小窗口
+            while sum - nums[left] >= target:
+                sum -= nums[left]
+                left += 1
+            ans = min(ans, right - left + 1)
+        return ans if ans <= n else 0
+
+    # 2904 Longest Substring with At Most K Distinct Characters
+    def shortestBeautifulSubstring(self, s: str, k: int) -> str:
+        if s.count('1') < k:
+            return ''
+        ans = s
+        left = 0
+        count = defaultdict(int)
+
+        for right, num in enumerate(s):
+            count[s[right]] += 1
+            # 满足条件时尽量缩小窗口
+            while count['1'] > k or s[left] == '0':
+                count[s[left]] -= 1
+                left += 1
+            if count['1'] == k:
+                t = s[left: right + 1]
+                if len(t) < len(ans) or len(t) == len(ans) and t < ans:
+                    ans = t
+        return ans
+
+    # 1234 Replace the Substring for Balanced String
+    def balancedString(self, s: str) -> int:
+        # TODO
+        pass
+
+
 
 if __name__ == '__main__':
     sol = SlidingWindow()
