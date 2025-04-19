@@ -136,7 +136,6 @@ class SlidingWindow:
         pass
 
 
-
 if __name__ == '__main__':
     sol = SlidingWindow()
     res = sol.takeCharacters("aabaaaacaabc", 2)
