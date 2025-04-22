@@ -1,15 +1,11 @@
-from collections import defaultdict
 from typing import List
-
-"""
-    1.单序列双指针
-"""
 
 
 class TwoPointers:
     """
-        1.1 相向双指针
+        1.单序列双指针
     """
+    """ 相向双指针（对撞指针）"""
 
     # 1750 Minimum Length of String After Deleting Similar Ends
     def minimumLength(self, s: str) -> int:
@@ -91,9 +87,8 @@ class TwoPointers:
 
         return ans
 
-    """
-       1.2 原地修改（快慢指针）
-    """
+    """ 原地修改（快慢指针）"""
+
     # 27 Remove Element
     def removeElement(self, nums: List[int], val: int) -> int:
         slow = 0
@@ -116,11 +111,78 @@ class TwoPointers:
 
         return slow
 
+    # 80 Remove Duplicates from Sorted Array II
+    def removeDuplicates2(self, nums: List[int]) -> int:
+        if len(nums) <= 2:
+            return len(nums)
+
+        slow = 2  # 前两个肯定保留
+        for fast in range(2, len(nums)):
+            if nums[fast] != nums[slow - 2]:
+                nums[slow] = nums[fast]
+                slow += 1
+
+        return slow
+
+    # 922 Sort Array By Parity II
+    def sortArrayByParityII(self, nums: List[int]) -> List[int]:
+        even, odd = 0, 1
+        n = len(nums)
+
+        while even < n and odd < n:
+            # 找到错误的 even 索引
+            while even < n and nums[even] % 2 == 0:
+                even += 2
+            # 找到错误的 odd 索引
+            while odd < n and nums[odd] % 2 == 1:
+                odd += 2
+
+            # 交换错误位置的奇偶值
+            if even < n and odd < n:
+                nums[even], nums[odd] = nums[odd], nums[even]
+                even += 2
+                odd += 2
+
+        return nums
+
+    """
+        2.双序列双指针
+    """
+    # 2109 Adding Spaces to a String
+    def addSpaces(self, s: str, spaces: List[int]) -> str:
+        p1, p2 = 0, 0
+        ans: list[str] = []
+
+        while p1 < len(s):
+            if p2 < len(spaces) and p1 == spaces[p2]:
+                ans.append(" ")
+                p2 += 1
+            ans.append(s[p1])
+            p1 += 1
+
+        return ''.join(ans)
+
+    # 1855 Maximum Distance Between a Pair of Values
+    def maxDistance(self, nums1: List[int], nums2: List[int]) -> int:
+        p1, p2 = 0, 0
+        ans: int = 0
+        while p1 < len(nums1) and p2 < len(nums2):
+            if nums1[p1] <= nums2[p2]:
+                p2 += 1
+                ans = max(ans, p2 - p1)
+            elif nums1[p1] > nums2[p2]:
+                p1 += 1
+
+        return ans
+
+
 if __name__ == '__main__':
     slu = TwoPointers()
     # slu.minimumLength("aabccabba")
     # ans = slu.threeSumMulti([1, 1, 2, 2, 3, 3, 4, 4, 5, 5], 8)
-    nums = [0, 1, 2, 2, 3, 0, 4, 2]
-    ans = slu.removeElement(nums, 2)
+    nums = [1, 1, 1, 2, 2, 3]
+    # ans = slu.removeElement(nums, 2)
+    ans = slu.removeDuplicates2(nums)
     print(nums)
+
     pass
