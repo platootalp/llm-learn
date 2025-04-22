@@ -14,6 +14,17 @@
             </LeetcodeEditor>
           </value>
         </entry>
+        <entry key="/var/folders/y2/zl1v3z8n02s_vb49273qd5480000gp/T/leetcode/editor/cn/[1574]删除最短的子数组使剩余数组有序.py">
+          <value>
+            <LeetcodeEditor>
+              <option name="contentPath" value="/var/folders/y2/zl1v3z8n02s_vb49273qd5480000gp/T/leetcode/editor/cn/doc/content/[1574]删除最短的子数组使剩余数组有序.md" />
+              <option name="frontendQuestionId" value="leetcode.cn1574" />
+              <option name="host" value="leetcode.cn" />
+              <option name="path" value="/var/folders/y2/zl1v3z8n02s_vb49273qd5480000gp/T/leetcode/editor/cn/[1574]删除最短的子数组使剩余数组有序.py" />
+              <option name="titleSlug" value="shortest-subarray-to-be-removed-to-make-array-sorted" />
+            </LeetcodeEditor>
+          </value>
+        </entry>
         <entry key="/var/folders/y2/zl1v3z8n02s_vb49273qd5480000gp/T/leetcode/editor/cn/[1658]将 x 减到 0 的最小操作数.py">
           <value>
             <LeetcodeEditor>
@@ -77,6 +88,28 @@
               <option name="host" value="leetcode.cn" />
               <option name="path" value="/var/folders/y2/zl1v3z8n02s_vb49273qd5480000gp/T/leetcode/editor/cn/[2516]每种字符至少取 K 个.py" />
               <option name="titleSlug" value="take-k-of-each-character-from-left-and-right" />
+            </LeetcodeEditor>
+          </value>
+        </entry>
+        <entry key="/var/folders/y2/zl1v3z8n02s_vb49273qd5480000gp/T/leetcode/editor/cn/[26]删除有序数组中的重复项.py">
+          <value>
+            <LeetcodeEditor>
+              <option name="contentPath" value="/var/folders/y2/zl1v3z8n02s_vb49273qd5480000gp/T/leetcode/editor/cn/doc/content/[26]删除有序数组中的重复项.md" />
+              <option name="frontendQuestionId" value="leetcode.cn26" />
+              <option name="host" value="leetcode.cn" />
+              <option name="path" value="/var/folders/y2/zl1v3z8n02s_vb49273qd5480000gp/T/leetcode/editor/cn/[26]删除有序数组中的重复项.py" />
+              <option name="titleSlug" value="remove-duplicates-from-sorted-array" />
+            </LeetcodeEditor>
+          </value>
+        </entry>
+        <entry key="/var/folders/y2/zl1v3z8n02s_vb49273qd5480000gp/T/leetcode/editor/cn/[27]移除元素.py">
+          <value>
+            <LeetcodeEditor>
+              <option name="contentPath" value="/var/folders/y2/zl1v3z8n02s_vb49273qd5480000gp/T/leetcode/editor/cn/doc/content/[27]移除元素.md" />
+              <option name="frontendQuestionId" value="leetcode.cn27" />
+              <option name="host" value="leetcode.cn" />
+              <option name="path" value="/var/folders/y2/zl1v3z8n02s_vb49273qd5480000gp/T/leetcode/editor/cn/[27]移除元素.py" />
+              <option name="titleSlug" value="remove-element" />
             </LeetcodeEditor>
           </value>
         </entry>

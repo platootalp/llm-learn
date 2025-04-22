@@ -1,3 +1,4 @@
+from collections import defaultdict
 from typing import List
 
 """
@@ -90,10 +91,36 @@ class TwoPointers:
 
         return ans
 
+    """
+       1.2 原地修改（快慢指针）
+    """
+    # 27 Remove Element
+    def removeElement(self, nums: List[int], val: int) -> int:
+        slow = 0
+        for fast in range(len(nums)):
+            if nums[fast] != val:
+                nums[slow] = nums[fast]
+                slow += 1
+        return slow
+
+    # 26 Remove Duplicates from Sorted Array
+    def removeDuplicates(self, nums: List[int]) -> int:
+        if not nums:
+            return 0
+
+        slow = 1
+        for fast in range(1, len(nums)):
+            if nums[fast] != nums[fast - 1]:
+                nums[slow] = nums[fast]
+                slow += 1
+
+        return slow
 
 if __name__ == '__main__':
     slu = TwoPointers()
     # slu.minimumLength("aabccabba")
-    ans = slu.threeSumMulti([1, 1, 2, 2, 3, 3, 4, 4, 5, 5], 8)
-    print(ans)
+    # ans = slu.threeSumMulti([1, 1, 2, 2, 3, 3, 4, 4, 5, 5], 8)
+    nums = [0, 1, 2, 2, 3, 0, 4, 2]
+    ans = slu.removeElement(nums, 2)
+    print(nums)
     pass
