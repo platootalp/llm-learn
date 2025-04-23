@@ -1,5 +1,7 @@
 from typing import List
 
+from data_structure.stack import Stack
+
 
 class TwoPointers:
     """
@@ -148,6 +150,7 @@ class TwoPointers:
     """
         2.双序列双指针
     """
+
     # 2109 Adding Spaces to a String
     def addSpaces(self, s: str, spaces: List[int]) -> str:
         p1, p2 = 0, 0
@@ -175,14 +178,67 @@ class TwoPointers:
 
         return ans
 
+    # 2337 Move Pieces to Obtain a String
+    def canChange(self, start: str, target: str) -> bool:
+        n = len(start)
+        p1 = p2 = 0
+
+        while p1 < n or p2 < n:
+            # 跳过空格
+            while p1 < n and start[p1] == '_':
+                p1 += 1
+            while p2 < n and target[p2] == '_':
+                p2 += 1
+
+            # 都走到头了，说明匹配成功
+            if p1 == n and p2 == n:
+                return True
+            # 一个走到头另一个没走到，匹配失败
+            if p1 == n or p2 == n:
+                return False
+
+            if start[p1] != target[p2]:
+                return False
+            if start[p1] == 'L' and p1 < p2:
+                return False  # 'L' 只能左移
+            if start[p1] == 'R' and p1 > p2:
+                return False  # 'R' 只能右移
+            p1 += 1
+            p2 += 1
+        return True
+
+    # 844. Backspace String Compare
+    def backspaceCompare(self, s: str, t: str) -> bool:
+        p1, p2 = len(s) - 1, len(t) - 1
+        b1, b2 = 0, 0
+        while p1 >= 0 and p2 >= 0:
+            # 获取
+            while p1 >= 0 and s[p1] == '#':
+                b1 += 1
+                p1 -= 1
+            while p2 >= 0 and s[p2] == '#':
+                b2 += 1
+                p2 -= 1
+            # 消耗'#'
+            while p1 >= 0 and b1 > 0:
+                p1 -= 1
+                b1 -= 1
+            while p2 >= 0 and b2 > 0:
+                p2 -= 1
+                b2 -= 1
+            if s[p1] != s[p2]:
+                return False
+
+        return True
+
 
 if __name__ == '__main__':
     slu = TwoPointers()
     # slu.minimumLength("aabccabba")
     # ans = slu.threeSumMulti([1, 1, 2, 2, 3, 3, 4, 4, 5, 5], 8)
-    nums = [1, 1, 1, 2, 2, 3]
+    # nums = [1, 1, 1, 2, 2, 3]
     # ans = slu.removeElement(nums, 2)
-    ans = slu.removeDuplicates2(nums)
-    print(nums)
-
+    # ans = slu.removeDuplicates2(nums)
+    # success = slu.canChange("_L__R__R_L", "L______RR_")
+    slu.backspaceCompare("a#c", "b")
     pass
