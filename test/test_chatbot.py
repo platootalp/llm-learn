@@ -52,3 +52,4 @@ if __name__ == '__main__':
             print("User: " + user_input)
             stream_graph_updates(user_input)
             break
+
