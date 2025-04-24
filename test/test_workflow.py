@@ -1,7 +1,7 @@
 from langchain_core.runnables import RunnableConfig
 from typing_extensions import Annotated, TypedDict
 from langgraph.graph import StateGraph
-from IPython.display import Image, display
+
 
 # 定义一个用于更新状态的reducer函数
 def reducer(a: list, b: int | None) -> list:
@@ -34,7 +34,7 @@ def node(state: State, config: RunnableConfig) -> dict:
     node_name = config.get("node_name", "Unknown Node")  # 默认值为"Unknown Node"
 
     print(f"Running node: {node_name}")  # 打印当前节点名称
-    next_value = x * r   # 根据公式计算新的x值
+    next_value = x * r  # 根据公式计算新的x值
     return {"x": next_value}  # 返回新的x值
 
 
@@ -46,10 +46,16 @@ graph.add_edge("A", "B")
 graph.add_sequence([("C", node), ("D", node)])
 graph.add_edge("B", "C")
 
-
 # 设置图的入口和结束点
 graph.set_entry_point("A")
 graph.set_finish_point("D")
+
+
+# try:
+#     display(Image(compiled.get_graph().draw_mermaid_png()))
+# except Exception:
+#     # This requires some extra dependencies and is optional
+#     pass
 
 # 编译图
 compiled = graph.compile()
@@ -59,10 +65,3 @@ print(compiled.config_specs)
 
 # 使用输入状态和配置执行图，并打印结果
 step1 = compiled.invoke({"x": 1}, {"configurable": {"r": 3.0}})
-
-
-try:
-    display(Image(compiled.get_graph().draw_mermaid_png()))
-except Exception:
-    # This requires some extra dependencies and is optional
-    pass
