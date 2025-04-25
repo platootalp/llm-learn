@@ -231,6 +231,19 @@ class TwoPointers:
 
         return True
 
+        """ 判断子序列 """
+
+        # 392. Is Subsequence
+        def isSubsequence(self, s: str, t: str) -> bool:
+            p1, p2 = 0, 0
+            while p1 < len(s) or p2 < len(t):
+                if s[p1] == t[p2]:
+                    p1 += 1
+                p2 += 1
+
+            return p1 == len(s)
+
+
 
 if __name__ == '__main__':
     slu = TwoPointers()

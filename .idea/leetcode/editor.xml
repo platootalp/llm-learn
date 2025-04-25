@@ -14,6 +14,28 @@
             </LeetcodeEditor>
           </value>
         </entry>
+        <entry key="/var/folders/y2/zl1v3z8n02s_vb49273qd5480000gp/T/leetcode/editor/cn/[1023]驼峰式匹配.py">
+          <value>
+            <LeetcodeEditor>
+              <option name="contentPath" value="/var/folders/y2/zl1v3z8n02s_vb49273qd5480000gp/T/leetcode/editor/cn/doc/content/[1023]驼峰式匹配.md" />
+              <option name="frontendQuestionId" value="leetcode.cn1023" />
+              <option name="host" value="leetcode.cn" />
+              <option name="path" value="/var/folders/y2/zl1v3z8n02s_vb49273qd5480000gp/T/leetcode/editor/cn/[1023]驼峰式匹配.py" />
+              <option name="titleSlug" value="camelcase-matching" />
+            </LeetcodeEditor>
+          </value>
+        </entry>
+        <entry key="/var/folders/y2/zl1v3z8n02s_vb49273qd5480000gp/T/leetcode/editor/cn/[1537]最大得分.py">
+          <value>
+            <LeetcodeEditor>
+              <option name="contentPath" value="/var/folders/y2/zl1v3z8n02s_vb49273qd5480000gp/T/leetcode/editor/cn/doc/content/[1537]最大得分.md" />
+              <option name="frontendQuestionId" value="leetcode.cn1537" />
+              <option name="host" value="leetcode.cn" />
+              <option name="path" value="/var/folders/y2/zl1v3z8n02s_vb49273qd5480000gp/T/leetcode/editor/cn/[1537]最大得分.py" />
+              <option name="titleSlug" value="get-the-maximum-score" />
+            </LeetcodeEditor>
+          </value>
+        </entry>
         <entry key="/var/folders/y2/zl1v3z8n02s_vb49273qd5480000gp/T/leetcode/editor/cn/[1574]删除最短的子数组使剩余数组有序.py">
           <value>
             <LeetcodeEditor>
@@ -146,6 +168,17 @@
             </LeetcodeEditor>
           </value>
         </entry>
+        <entry key="/var/folders/y2/zl1v3z8n02s_vb49273qd5480000gp/T/leetcode/editor/cn/[2825]循环增长使字符串子序列等于另一个字符串.py">
+          <value>
+            <LeetcodeEditor>
+              <option name="contentPath" value="/var/folders/y2/zl1v3z8n02s_vb49273qd5480000gp/T/leetcode/editor/cn/doc/content/[2825]循环增长使字符串子序列等于另一个字符串.md" />
+              <option name="frontendQuestionId" value="leetcode.cn2825" />
+              <option name="host" value="leetcode.cn" />
+              <option name="path" value="/var/folders/y2/zl1v3z8n02s_vb49273qd5480000gp/T/leetcode/editor/cn/[2825]循环增长使字符串子序列等于另一个字符串.py" />
+              <option name="titleSlug" value="make-string-a-subsequence-using-cyclic-increments" />
+            </LeetcodeEditor>
+          </value>
+        </entry>
         <entry key="/var/folders/y2/zl1v3z8n02s_vb49273qd5480000gp/T/leetcode/editor/cn/[2904]最短且字典序最小的美丽子字符串.py">
           <value>
             <LeetcodeEditor>
@@ -154,6 +187,28 @@
               <option name="host" value="leetcode.cn" />
               <option name="path" value="/var/folders/y2/zl1v3z8n02s_vb49273qd5480000gp/T/leetcode/editor/cn/[2904]最短且字典序最小的美丽子字符串.py" />
               <option name="titleSlug" value="shortest-and-lexicographically-smallest-beautiful-string" />
+            </LeetcodeEditor>
+          </value>
+        </entry>
+        <entry key="/var/folders/y2/zl1v3z8n02s_vb49273qd5480000gp/T/leetcode/editor/cn/[3132]找出与数组相加的整数 II.py">
+          <value>
+            <LeetcodeEditor>
+              <option name="contentPath" value="/var/folders/y2/zl1v3z8n02s_vb49273qd5480000gp/T/leetcode/editor/cn/doc/content/[3132]找出与数组相加的整数 II.md" />
+              <option name="frontendQuestionId" value="leetcode.cn3132" />
+              <option name="host" value="leetcode.cn" />
+              <option name="path" value="/var/folders/y2/zl1v3z8n02s_vb49273qd5480000gp/T/leetcode/editor/cn/[3132]找出与数组相加的整数 II.py" />
+              <option name="titleSlug" value="find-the-integer-added-to-array-ii" />
+            </LeetcodeEditor>
+          </value>
+        </entry>
+        <entry key="/var/folders/y2/zl1v3z8n02s_vb49273qd5480000gp/T/leetcode/editor/cn/[392]判断子序列.py">
+          <value>
+            <LeetcodeEditor>
+              <option name="contentPath" value="/var/folders/y2/zl1v3z8n02s_vb49273qd5480000gp/T/leetcode/editor/cn/doc/content/[392]判断子序列.md" />
+              <option name="frontendQuestionId" value="leetcode.cn392" />
+              <option name="host" value="leetcode.cn" />
+              <option name="path" value="/var/folders/y2/zl1v3z8n02s_vb49273qd5480000gp/T/leetcode/editor/cn/[392]判断子序列.py" />
+              <option name="titleSlug" value="is-subsequence" />
             </LeetcodeEditor>
           </value>
         </entry>
