@@ -1,7 +1,5 @@
-import math
 from typing import Optional, List
 
-from torch.fx.experimental.unification.unification_tools import first
 
 
 class ListNode:
