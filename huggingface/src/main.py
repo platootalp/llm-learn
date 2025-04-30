@@ -4,12 +4,12 @@ import logging
 # 配置日志
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+model_name = "nlptown/bert-base-multilingual-uncased-sentiment"
 
 def sentiment_analysis():
     try:
         # 初始化情感分析pipeline
         logger.info("正在初始化情感分析模型...")
-        model_name = "nlptown/bert-base-multilingual-uncased-sentiment"
         model = AutoModelForSequenceClassification.from_pretrained(model_name)
         tokenizer = AutoTokenizer.from_pretrained(model_name)
         classifier = pipeline("sentiment-analysis", model=model, tokenizer=tokenizer)
@@ -36,8 +36,11 @@ def sentiment_analysis():
         logger.error(f"发生错误: {str(e)}")
         raise
 
-def main():
-    passspeech_recognizer = pipeline("automatic-speech-recognition", model="facebook/wav2vec2-base-960h")
+def tokenizer_test():
+    tokenizer = AutoTokenizer.from_pretrained(model_name)
+    print(tokenizer("We are very happy to show you the 🤗 Transformers library."))
+    print(tokenizer.tokenize("Nous sommes très heureux de vous présenter la bibliothèque 🤗 Transformers."))
 
 if __name__ == "__main__":
-    sentiment_analysis()
+    # sentiment_analysis()
+    tokenizer_test()
