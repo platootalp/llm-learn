@@ -54,10 +54,10 @@ def sentiment_analysis():
         logger.error(f"发生错误: {str(e)}")
         raise
 
-def tokenizer_test():
-    tokenizer = AutoTokenizer.from_pretrained(model_name)
-    print(tokenizer("We are very happy to show you the 🤗 Transformers library."))
-    print(tokenizer.tokenize("Nous sommes très heureux de vous présenter la bibliothèque 🤗 Transformers."))
+# def tokenizer_test():
+#     tokenizer = AutoTokenizer.from_pretrained(model_name)
+#     print(tokenizer("We are very happy to show you the 🤗 Transformers library."))
+#     print(tokenizer.tokenize("Nous sommes très heureux de vous présenter la bibliothèque 🤗 Transformers."))
 
 def scaled_dot_product_attention():
     try:
