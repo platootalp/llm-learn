@@ -1,5 +1,5 @@
+from collections import defaultdict
 from typing import Optional, List
-
 
 
 class ListNode:
@@ -9,7 +9,7 @@ class ListNode:
 
 
 class Solution:
-    # 1290. 二进制链表转整数
+    # 1290 二进制链表转整数
     def getDecimalValue(self, head: Optional[ListNode]) -> int:
         ans = 0
         p = head
@@ -17,6 +17,7 @@ class Solution:
             ans += ans * 2 + p.val
             p = p.next
         return ans
+
     # 725
     def splitListToParts(self, head: Optional[ListNode], k: int) -> List[Optional[ListNode]]:
         # Step 1: Get the length of the list
@@ -50,3 +51,12 @@ class Solution:
             res.append(part_head)
 
         return res
+
+    # 817 链表组件
+    def numComponents(self, head: Optional[ListNode], nums: List[int]) -> int:
+        dict = defaultdict()
+        for num in nums:
+            dict[num] += 1
+
+
+
