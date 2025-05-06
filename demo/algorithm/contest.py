@@ -7,6 +7,5 @@ class Solution:
         return digits[0] * digits[1]
 
 
-
 if __name__ == '__main__':
     pass
