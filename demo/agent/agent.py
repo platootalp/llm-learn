@@ -4,7 +4,7 @@ from langgraph.prebuilt import create_react_agent
 from langchain_core.messages import HumanMessage
 from langchain_community.tools.tavily_search import TavilySearchResults
 
-from app.util import get_qwen_model
+from util import get_qwen_model
 
 # 初始化模型
 model = get_qwen_model()
