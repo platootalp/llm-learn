@@ -9,6 +9,10 @@ class ListNode:
 
 
 class Solution:
+    """
+        遍历链表
+    """
+
     # 1290 二进制链表转整数
     def getDecimalValue(self, head: Optional[ListNode]) -> int:
         ans = 0
@@ -58,5 +62,36 @@ class Solution:
         for num in nums:
             dict[num] += 1
 
+    """
+        删除节点
+    """
 
+    # 203 移除链表元素
+    def removeElements(self, head: Optional[ListNode], val: int) -> Optional[ListNode]:
+        dummy = ListNode(0)
+        dummy.next = head
+        p = dummy
 
+        while p.next:
+            if p.next.val == val:
+                p.next = p.next.next
+            else:
+                p = p.next
+
+        return dummy.next
+
+    # 3217
+    def modifiedList(self, nums: List[int], head: Optional[ListNode]) -> Optional[ListNode]:
+        dummy = ListNode(0)
+        dummy.next = head
+
+        p = dummy
+        dit = set(nums)
+
+        while p.next:
+            if p.next.val in dit:
+                p.next = p.next.next
+            else:
+                p = p.next
+
+        return dummy.next
