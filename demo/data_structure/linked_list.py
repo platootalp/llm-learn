@@ -1,5 +1,8 @@
 from collections import defaultdict
+from math import gcd
 from typing import Optional, List
+
+from data_structure.stack import Stack
 
 
 class ListNode:
@@ -22,7 +25,7 @@ class Solution:
             p = p.next
         return ans
 
-    # 725
+    # 725 分隔链表
     def splitListToParts(self, head: Optional[ListNode], k: int) -> List[Optional[ListNode]]:
         # Step 1: Get the length of the list
         length = 0
@@ -80,7 +83,7 @@ class Solution:
 
         return dummy.next
 
-    # 3217
+    # 3217 从链表中移除在数组中存在的节点
     def modifiedList(self, nums: List[int], head: Optional[ListNode]) -> Optional[ListNode]:
         dummy = ListNode(0)
         dummy.next = head
@@ -93,5 +96,54 @@ class Solution:
                 p.next = p.next.next
             else:
                 p = p.next
+
+        return dummy.next
+
+    # 82 删除排序链表中的重复元素 II
+    def deleteDuplicates(self, head: Optional[ListNode]) -> Optional[ListNode]:
+        cur = dummy = ListNode(next=head)
+
+        while cur.next and cur.next.next:
+            val = cur.next.val
+            if cur.next.next.val == val:
+                # 将中间节点相等的节点全部删除
+                while cur.next and cur.next.val == val:
+                    cur.next = cur.next.next
+            else:
+                cur = cur.next
+
+        return dummy.next
+
+    # 2487 从链表中移除节点
+    def removeNodes(self, head: Optional[ListNode]) -> Optional[ListNode]:
+        ans = ListNode(float('inf'))  # 哨兵节点，值为正无穷
+        stack = Stack[ListNode]()  # 使用你的 Stack 类
+        stack.push(ans)  # 初始压入哨兵节点
+
+        while head:
+            # 维护单调栈：弹出所有比当前节点小的栈顶节点
+            while not stack.is_empty() and head.val > stack.peek().val:
+                stack.pop()
+            # 更新指针并压入当前节点
+            stack.peek().next = head
+            stack.push(head)
+            head = head.next
+
+        return ans.next  # 返回处理后的链表头
+
+    """
+        插入节点
+    """
+
+    # 2807 在链表中插入最大公约数
+    def insertGreatestCommonDivisors(self, head: Optional[ListNode]) -> Optional[ListNode]:
+
+        dummy = ListNode(next=head)
+        while head and head.next:
+            q = head.next
+            gcd_node = ListNode(next=q)
+            gcd_node.val = gcd(head.val, q.val)
+            head.next = gcd_node
+            head = q
 
         return dummy.next
