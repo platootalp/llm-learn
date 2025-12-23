@@ -55,16 +55,12 @@ class AgentConfig:
         Action: tool_name(parameter="value")
         ```
         
-        当任务完成时，请使用：
-        ```
-        Thought: 我已收集足够信息，可以回答用户的问题
-        Action: finish(answer="[最终回答内容]")
-        ```
+        当任务完成，不再需要调用工具时，请直接返回最终答案，不需要使用任何工具。
         """
     )
     
     # 默认模型名称
-    DEFAULT_MODEL_NAME = os.environ.get("AGENT_DEFAULT_MODEL", "qwen")
+    DEFAULT_MODEL_NAME = os.environ.get("AGENT_DEFAULT_MODEL", "qwen-flash")
     
     # 默认线程ID
     DEFAULT_THREAD_ID = os.environ.get("AGENT_DEFAULT_THREAD_ID", "default")

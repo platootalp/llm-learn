@@ -11,8 +11,20 @@ from typing import Dict, Any, Optional, List
 from datetime import datetime
 
 # 导入自定义工具和配置
-from .tools import get_weather, get_attractions
-from .config import AgentConfig
+# 支持作为包模块导入和独立脚本运行
+try:
+    from .tools import get_weather, get_attractions
+    from .config import AgentConfig
+except ImportError:
+    # 作为独立脚本运行时，使用绝对导入
+    import sys
+    import os
+
+    # 添加项目根目录到 Python 路径
+    project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    sys.path.insert(0, project_root)
+    from src.agent.tools import get_weather, get_attractions
+    from src.agent.config import AgentConfig
 
 # 配置日志
 logging.basicConfig(level=getattr(logging, AgentConfig.LOG_LEVEL),
@@ -54,8 +66,8 @@ class TravelAssistantAgent:
         """
         self.model_name = model_name or AgentConfig.DEFAULT_MODEL_NAME
         self.thread_id = thread_id or AgentConfig.DEFAULT_THREAD_ID
-        self.api_key = os.environ.get("OPENAI_API_KEY")
-        self.api_base = os.environ.get("OPENAI_API_BASE", "https://api.openai.com/v1")
+        self.api_key = os.environ.get("DASHSCOPE_API_KEY")
+        self.api_base = os.environ.get("DASHSCOPE_API_URL", "https://api.openai.com/v1")
 
         if not self.api_key:
             # 如果没有API密钥，设置为测试模式
@@ -93,6 +105,13 @@ class TravelAssistantAgent:
                 return "Thought: 用户想知道上海的天气，我需要调用get_weather工具查询。\nAction: get_weather(city=\"上海\")"
             elif "景点" in user_query and "上海" in user_query:
                 return "Thought: 用户想了解上海的景点，我需要调用get_attractions工具获取推荐。\nAction: get_attractions(city=\"上海\")"
+            # 模拟工具调用后返回最终结果的情况
+            elif "工具调用结果" in user_query:
+                # 解析工具结果并返回最终回答
+                if "上海" in user_query and "天气" in user_query:
+                    return "根据查询结果，上海今天的天气是晴天，气温在15-25°C之间，空气质量良好。非常适合户外活动！"
+                elif "上海" in user_query and "景点" in user_query:
+                    return "根据推荐，上海的热门景点包括外滩、东方明珠、豫园和迪士尼乐园等。外滩适合欣赏夜景，东方明珠可以俯瞰上海全景，豫园展现了传统园林文化，迪士尼乐园则是家庭游的好去处。"
             else:
                 return "这是一个测试响应，实际使用时会调用OpenAI API生成真实回答。"
 
@@ -197,90 +216,111 @@ class TravelAssistantAgent:
                 "timestamp": timestamp
             })
 
-            # 构建消息列表
-            messages = [
-                           {"role": "system", "content": self.SYSTEM_PROMPT}
-                       ] + self.conversation_history
+            # 输出用户问题
+            print(f"\n{'=' * 60}")
+            print(f"User Question:")
+            print(f"{'=' * 60}")
+            print(f"{user_query}")
 
-            # 调用OpenAI API
-            response_content = self._call_openai(messages)
-            logger.debug(f"OpenAI response: {response_content[:100]}...")
+            # ReAct循环：持续调用API直到不需要工具调用
+            while True:
+                # 构建消息列表
+                messages = [
+                               {"role": "system", "content": self.SYSTEM_PROMPT}
+                           ] + self.conversation_history
 
-            # 添加AI响应到对话历史
-            self.conversation_history.append({"role": "assistant", "content": response_content})
+                # 调用OpenAI API
+                response_content = self._call_openai(messages)
+                logger.debug(f"OpenAI response: {response_content[:100]}...")
 
-            # 检查是否需要调用工具
-            tool_call = self._parse_tool_call(response_content)
-            if tool_call:
-                # 添加思考过程到结果
-                results.append({
-                    "type": "ai",
-                    "content": f"Thought: {tool_call['thought']}",
-                    "timestamp": timestamp
-                })
+                # 添加AI响应到对话历史
+                self.conversation_history.append({"role": "assistant", "content": response_content})
 
-                # 调用工具
-                tool_name = tool_call["tool_name"]
-                if tool_name in self.tools:
-                    try:
-                        tool_result = self.tools[tool_name](**tool_call["params"])
-                        logger.info(f"Tool {tool_name} executed successfully")
+                # 检查是否需要调用工具
+                tool_call = self._parse_tool_call(response_content)
+                if tool_call:
+                    # 输出思考过程
+                    print(f"\n{'=' * 60}")
+                    print(f"Thought: {tool_call['thought']}")
+                    print(f"{'=' * 60}")
 
-                        # 添加工具调用和结果到结果列表
-                        results.append({
-                            "type": "ai",
-                            "content": f"Action: {tool_name}({', '.join([f'{k}={v!r}' for k, v in tool_call['params'].items()])})",
-                            "timestamp": timestamp
-                        })
+                    # 添加思考过程到结果
+                    results.append({
+                        "type": "ai",
+                        "content": f"Thought: {tool_call['thought']}",
+                        "timestamp": timestamp
+                    })
 
-                        results.append({
-                            "type": "tool",
-                            "content": tool_result,
-                            "timestamp": timestamp
-                        })
+                    # 调用工具
+                    tool_name = tool_call["tool_name"]
+                    if tool_name in self.tools:
+                        try:
+                            # 输出工具调用信息
+                            params_str = ', '.join([f'{k}={v!r}' for k, v in tool_call['params'].items()])
+                            print(f"\n{'=' * 60}")
+                            print(f"Action: {tool_name}({params_str})")
+                            print(f"{'=' * 60}")
 
-                        # 将工具结果添加到对话历史并再次调用API
-                        self.conversation_history.append({"role": "user", "content": f"工具调用结果：{tool_result}"})
+                            tool_result = self.tools[tool_name](**tool_call["params"])
+                            logger.info(f"Tool {tool_name} executed successfully")
 
-                        # 重新构建消息列表
-                        messages = [
-                                       {"role": "system", "content": self.SYSTEM_PROMPT}
-                                   ] + self.conversation_history
+                            # 输出工具调用结果
+                            print(f"\n{'=' * 60}")
+                            print(f"Tool Result:")
+                            print(f"{'=' * 60}")
+                            print(f"{tool_result}")
 
-                        # 再次调用OpenAI API获取最终响应
-                        final_response = self._call_openai(messages)
-                        logger.debug(f"Final OpenAI response: {final_response[:100]}...")
+                            # 添加工具调用和结果到结果列表
+                            results.append({
+                                "type": "ai",
+                                "content": f"Action: {tool_name}({', '.join([f'{k}={v!r}' for k, v in tool_call['params'].items()])})",
+                                "timestamp": timestamp
+                            })
 
-                        # 添加最终响应到对话历史和结果列表
-                        self.conversation_history.append({"role": "assistant", "content": final_response})
-                        results.append({
-                            "type": "ai",
-                            "content": final_response,
-                            "timestamp": timestamp
-                        })
-                    except Exception as e:
-                        logger.error(f"Tool {tool_name} execution failed: {e}", exc_info=True)
-                        error_msg = f"工具调用失败: {str(e)}"
+                            results.append({
+                                "type": "tool",
+                                "content": tool_result,
+                                "timestamp": timestamp
+                            })
+
+                            # 将工具结果添加到对话历史
+                            self.conversation_history.append({"role": "user", "content": f"工具调用结果：{tool_result}"})
+                        except Exception as e:
+                            logger.error(f"Tool {tool_name} execution failed: {e}", exc_info=True)
+                            error_msg = f"工具调用失败: {str(e)}"
+                            print(f"\n{'=' * 60}")
+                            print(f"Error: {error_msg}")
+                            print(f"{'=' * 60}")
+                            results.append({
+                                "type": "error",
+                                "content": error_msg,
+                                "timestamp": timestamp
+                            })
+                            break
+                    else:
+                        error_msg = f"不支持的工具: {tool_name}"
+                        logger.error(error_msg)
+                        print(f"\n{'=' * 60}")
+                        print(f"Error: {error_msg}")
+                        print(f"{'=' * 60}")
                         results.append({
                             "type": "error",
                             "content": error_msg,
                             "timestamp": timestamp
                         })
+                        break
                 else:
-                    error_msg = f"不支持的工具: {tool_name}"
-                    logger.error(error_msg)
+                    # 不需要工具调用，直接返回AI响应
+                    print(f"\n{'=' * 60}")
+                    print(f"Final Answer:")
+                    print(f"{'=' * 60}")
+                    print(f"{response_content}")
                     results.append({
-                        "type": "error",
-                        "content": error_msg,
+                        "type": "ai",
+                        "content": response_content,
                         "timestamp": timestamp
                     })
-            else:
-                # 直接返回AI响应
-                results.append({
-                    "type": "ai",
-                    "content": response_content,
-                    "timestamp": timestamp
-                })
+                    break
 
         except Exception as e:
             logger.error(f"Error processing request: {e}", exc_info=True)
@@ -446,10 +486,6 @@ def main() -> None:
             # 处理请求
             results = agent.process_request(user_input)
             response = agent.get_response_content(results)
-
-            # 显示响应
-            print("\n助手回答:")
-            print(response)
 
         except KeyboardInterrupt:
             print("\n感谢使用智能旅行助手，再见！")

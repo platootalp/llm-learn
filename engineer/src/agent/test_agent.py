@@ -3,8 +3,14 @@
 测试智能旅行助手代理的功能
 """
 
+import os
+import sys
+# 将当前脚本所在目录的父目录（即项目根目录）添加到Python路径
+project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.insert(0, project_root)
+
 import logging
-from agent.agent import TravelAssistantAgent
+from src.agent.agent import TravelAssistantAgent
 
 # 配置日志
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
