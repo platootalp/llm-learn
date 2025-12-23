@@ -2,14 +2,12 @@ import os
 import logging
 import requests
 from typing import Optional
-from langchain_core.tools import tool
 
 # 配置日志
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
 
-@tool
 def get_weather(city: str) -> str:
     """
     通过调用wttr.in API查询指定城市的实时天气信息。
@@ -50,8 +48,6 @@ def get_weather(city: str) -> str:
         logger.error(f"Weather data parsing failed: {e}")
         return f"错误：解析天气数据失败，可能是城市名称无效 - {str(e)}"
 
-
-@tool
 def get_attractions(city: str, weather: Optional[str] = None) -> str:
     """
     根据城市和天气，使用Tavily Search API搜索并返回优化后的景点推荐。
