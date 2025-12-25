@@ -7,3 +7,4 @@ Requires-Dist: python-dotenv>=1.2.1
 Requires-Dist: openai>=1.0.0
 Requires-Dist: requests>=2.31.0
 Requires-Dist: tavily-python>=0.7.17
+Requires-Dist: langchain>=1.2.0

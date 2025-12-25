@@ -19,6 +19,8 @@ src/engineer.egg-info/SOURCES.txt
 src/engineer.egg-info/dependency_links.txt
 src/engineer.egg-info/requires.txt
 src/engineer.egg-info/top_level.txt
+src/sample/__init__.py
+src/sample/react_sample.py
 src/util/__init__.py
 src/util/llm_factory.py
 test/test.py
