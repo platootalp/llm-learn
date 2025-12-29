@@ -125,7 +125,7 @@ class ReflexionAgent:
                 print(f"{solution}")
                 return solution
 
-            reflection = self.reflect(question, solution, result)
+            self.reflect(question, solution, result)
 
         print(f"\n--- 最终解决方案 ---")
         print(f"{self.last_solution}")

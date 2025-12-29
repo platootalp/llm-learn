@@ -2,7 +2,6 @@
 QwenLLM API 客户端封装
 使用 OpenAI 风格客户端封装，调用 dashscope API
 """
-
 from typing import List
 from openai import OpenAI
 

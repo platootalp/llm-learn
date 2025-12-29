@@ -1,5 +1,5 @@
 """
-Basic Reflection Agent 示例实现
+Reflection Agent 示例实现
 - 生成初始答案
 - 反思答案质量
 - 基于反思改进答案
@@ -47,7 +47,7 @@ REFINED_RESPONSE_PROMPT = """
 """
 
 
-class BasicReflectionAgent:
+class ReflectionAgent:
     """
     Basic Reflection 智能体
     - 生成初始答案
@@ -116,8 +116,8 @@ if __name__ == "__main__":
     llm = QwenLLM(api_key=api_key, base_url=base_url, model_name="qwen-plus")
 
     print("=" * 60)
-    print("Basic Reflection Agent 示例")
+    print("Reflection Agent 示例")
     print("=" * 60)
 
-    br_agent = BasicReflectionAgent(llm_client=llm, max_reflections=2)
-    br_agent.run("什么是人工智能？")
+    br_agent = ReflectionAgent(llm_client=llm, max_reflections=2)
+    br_agent.run("用Java语言实现一个高效的令牌桶算法")
