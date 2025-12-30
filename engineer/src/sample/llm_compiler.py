@@ -1,256 +1,365 @@
 """
-LLMCompiler Agent 示例实现
-- Function Calling Planner: 生成 DAG 表示任务依赖关系
-- Task Fetching Unit: 动态调度无依赖任务进行并行执行
-- Joining Unit: 聚合依赖结果并触发后续调用
+LLMCompiler - 通过 DAG 实现工具调用的并行编排
+核心组件：
+1. Function Calling Planner - 生成 DAG 执行计划
+2. Task Fetching Unit - 并行调度就绪任务
+3. Joining Unit - 结果聚合
 """
-
 import os
+import asyncio
 import re
-from typing import List, Dict, Any, Set
-from dataclasses import dataclass, field
-from collections import defaultdict, deque
+import json
 from dotenv import load_dotenv
+from typing import Dict, List, Set, Any, Optional, Tuple
+from dataclasses import dataclass, field
 from qwen_llm import QwenLLM
-
-
-PLANNER_PROMPT = """
-你是一个任务规划专家。你的任务是将复杂问题分解为多个子任务，并明确它们之间的依赖关系。
-
-问题: {question}
-
-请将问题分解为多个子任务，并构建一个有向无环图（DAG）来表示任务之间的依赖关系。
-- 如果任务 A 依赖任务 B 的结果，则表示为 A → B
-- 没有依赖的任务可以并行执行
-- 每个任务都应该有明确的执行目标
-
-请按照以下格式输出:
-```python
-{{
-    "tasks": [
-        {{"id": "task1", "description": "子任务1描述", "dependencies": []}},
-        {{"id": "task2", "description": "子任务2描述", "dependencies": ["task1"]}},
-        {{"id": "task3", "description": "子任务3描述", "dependencies": ["task1"]}},
-        {{"id": "task4", "description": "子任务4描述", "dependencies": ["task2", "task3"]}}
-    ]
-}}
-```
-
-注意：
-- dependencies 列表中的任务 ID 必须在 tasks 中定义
-- 确保生成的图是有向无环图（DAG），不能有循环依赖
-- 尽量最大化可以并行执行的任务数量
-"""
-
-
-TASK_EXECUTION_PROMPT = """
-你是一个任务执行专家。你的任务是执行给定的子任务。
-
-子任务: {task_description}
-
-请仅输出该子任务的执行结果，不要包含任何额外解释。
-"""
+from sample.tools import ToolExecutor
 
 
 @dataclass
-class Task:
-    id: str
-    description: str
-    dependencies: List[str] = field(default_factory=list)
-    result: str = ""
-    completed: bool = False
+class TaskNode:
+    """DAG 节点，表示一个工具调用任务"""
+    task_id: str
+    tool_name: str
+    arguments: str
+    dependencies: Set[str] = field(default_factory=set)
+    result: Optional[str] = None
+    status: str = "pending"
 
 
+@dataclass
 class DAG:
-    def __init__(self, tasks: List[Dict[str, Any]]):
-        self.tasks: Dict[str, Task] = {}
-        self.adjacency: Dict[str, Set[str]] = defaultdict(set)
-        self.reverse_adjacency: Dict[str, Set[str]] = defaultdict(set)
-        
-        for task_data in tasks:
-            task = Task(
-                id=task_data["id"],
-                description=task_data["description"],
-                dependencies=task_data.get("dependencies", [])
-            )
-            self.tasks[task.id] = task
-            
-            for dep in task.dependencies:
-                self.adjacency[task.id].add(dep)
-                self.reverse_adjacency[dep].add(task.id)
-    
-    def get_ready_tasks(self) -> List[Task]:
-        ready = []
-        for task_id, task in self.tasks.items():
-            if not task.completed and all(self.tasks[dep].completed for dep in task.dependencies):
-                ready.append(task)
-        return ready
-    
+    """有向无环图，表示执行计划"""
+    nodes: Dict[str, TaskNode] = field(default_factory=dict)
+    edges: Dict[str, Set[str]] = field(default_factory=dict)
+
+    def add_node(self, node: TaskNode):
+        self.nodes[node.task_id] = node
+        self.edges[node.task_id] = set()
+
+    def add_edge(self, from_id: str, to_id: str):
+        if from_id in self.edges and to_id in self.edges:
+            self.edges[from_id].add(to_id)
+
+    def get_ready_tasks(self) -> List[TaskNode]:
+        """获取所有依赖已满足的待执行任务"""
+        ready_tasks = []
+        for task_id, node in self.nodes.items():
+            if node.status == "pending":
+                deps = node.dependencies
+                if all(self.nodes[dep].result is not None for dep in deps):
+                    ready_tasks.append(node)
+        return ready_tasks
+
     def is_complete(self) -> bool:
-        return all(task.completed for task in self.tasks.values())
-    
-    def mark_complete(self, task_id: str, result: str):
-        if task_id in self.tasks:
-            self.tasks[task_id].completed = True
-            self.tasks[task_id].result = result
+        return all(node.status == "completed" for node in self.nodes.values())
 
 
 class FunctionCallingPlanner:
-    def __init__(self, llm_client: QwenLLM):
-        self.llm_client = llm_client
-    
-    def plan(self, question: str) -> DAG:
-        prompt = PLANNER_PROMPT.format(question=question)
-        response = self.llm_client.think([{"role": "user", "content": prompt}])
+    """Function Calling Planner - 生成 DAG 执行计划"""
+
+    PLANNER_PROMPT = """
+        请为以下任务制定一个执行计划，使用有向无环图（DAG）的形式表示。
+        每个节点代表一个工具调用，边表示数据依赖关系。
         
-        tasks_data = self._extract_tasks(response)
-        dag = DAG(tasks_data)
+        可用工具：
+        {tool_descriptions}
         
-        print(f"\n--- Function Calling Planner: 任务规划 ---")
-        for task_id, task in dag.tasks.items():
-            deps = task.dependencies
-            deps_str = f" (依赖: {', '.join(deps)})" if deps else " (无依赖)"
-            print(f"  {task_id}: {task.description}{deps_str}")
+        输出格式要求（JSON）：
+        {{
+          "tasks": [
+            {{
+              "task_id": "T1",
+              "tool_name": "tool_name",
+              "arguments": "参数内容",
+              "dependencies": []
+            }},
+            {{
+              "task_id": "T2",
+              "tool_name": "tool_name",
+              "arguments": "参数内容（可引用前置任务结果，如 #T1）",
+              "dependencies": ["T1"]
+            }}
+          ]
+        }}
         
-        parallel_groups = self._identify_parallel_groups(dag)
-        print(f"\n--- 并行执行计划 ---")
-        for i, group in enumerate(parallel_groups, 1):
-            task_ids = [t.id for t in group]
-            print(f"  阶段 {i}: {', '.join(task_ids)} (可并行)")
+        重要规则：
+        1. task_id 必须唯一，格式为 T1, T2, T3...
+        2. dependencies 列出该任务依赖的前置任务 ID
+        3. arguments 中可以用 #T1, #T2 引用前置任务的结果
+        4. 如果需要 LLM 进行推理，使用 "LLM" 作为 tool_name
+        5. 确保生成的图是无环的（没有循环依赖）
+        6. 对于需要多个参数的工具，使用 JSON 格式：{{"param1": "value1", "param2": "value2"}}
         
+        示例：
+        任务：一个长方体水箱长 2 米、宽 1.5 米、高 1 米。若每分钟注水 0.3 立方米，注满需要多少分钟？
+        {{
+          "tasks": [
+            {{
+              "task_id": "T1",
+              "tool_name": "LLM",
+              "arguments": "计算 2 * 1.5 * 1",
+              "dependencies": []
+            }},
+            {{
+              "task_id": "T2",
+              "tool_name": "LLM",
+              "arguments": "用 #T1 除以 0.3",
+              "dependencies": ["T1"]
+            }}
+          ]
+        }}
+                
+        任务：{task}
+        
+        请严格按照上述 JSON 格式输出，不要包含其他内容。
+    """
+
+    def __init__(self, llm_client: QwenLLM, tool_executor: ToolExecutor):
+        self.llm = llm_client
+        self.tool_executor = tool_executor
+
+    def generate_plan(self, task: str) -> DAG:
+        """生成 DAG 执行计划"""
+        tool_desc = self.tool_executor.get_tool_descriptions()
+        prompt = self.PLANNER_PROMPT.format(
+            tool_descriptions=tool_desc,
+            task=task
+        )
+
+        response = self.llm.think([{"role": "user", "content": prompt}]).strip()
+
+        try:
+            plan_data = self._parse_response(response)
+            return self._build_dag(plan_data)
+        except Exception as e:
+            raise Exception(f"生成计划失败: {e}\nLLM 响应: {response}")
+
+    def _parse_response(self, response: str) -> Dict[str, Any]:
+        """解析 LLM 返回的 JSON"""
+        json_match = re.search(r'\{[\s\S]*}', response)
+        if json_match:
+            json_str = json_match.group(0)
+            return json.loads(json_str)
+        raise ValueError("无法从响应中提取有效的 JSON")
+
+    def _build_dag(self, plan_data: Dict[str, Any]) -> DAG:
+        """构建 DAG"""
+        dag = DAG()
+
+        for task_info in plan_data.get("tasks", []):
+            task_id = task_info["task_id"]
+            tool_name = task_info["tool_name"]
+            arguments = task_info["arguments"]
+            dependencies = set(task_info.get("dependencies", []))
+
+            node = TaskNode(
+                task_id=task_id,
+                tool_name=tool_name,
+                arguments=arguments,
+                dependencies=dependencies
+            )
+            dag.add_node(node)
+
+        for task_id, node in dag.nodes.items():
+            for dep_id in node.dependencies:
+                dag.add_edge(dep_id, task_id)
+
         return dag
-    
-    def _extract_tasks(self, text: str) -> List[Dict[str, Any]]:
-        match = re.search(r"```python\s*\{(.*?)\}\s*```", text, re.DOTALL)
-        if match:
-            try:
-                tasks_str = "{" + match.group(1) + "}"
-                data = eval(tasks_str)
-                return data.get("tasks", [])
-            except:
-                return []
-        return []
-    
-    def _identify_parallel_groups(self, dag: DAG) -> List[List[Task]]:
-        groups = []
-        remaining = set(dag.tasks.keys())
-        
-        while remaining:
-            ready = [dag.tasks[tid] for tid in remaining if 
-                    all(dag.tasks[dep].completed for dep in dag.tasks[tid].dependencies)]
-            
-            if not ready:
-                break
-            
-            groups.append(ready)
-            for task in ready:
-                remaining.remove(task.id)
-                task.completed = True
-            
-            for task in ready:
-                task.completed = False
-        
-        for task in dag.tasks.values():
-            task.completed = False
-        
-        return groups
 
 
 class TaskFetchingUnit:
-    def __init__(self, llm_client: QwenLLM):
-        self.llm_client = llm_client
-    
-    def execute_ready_tasks(self, dag: DAG) -> List[Task]:
+    """Task Fetching Unit - 并行调度就绪任务"""
+
+    def __init__(self, tool_executor: ToolExecutor, llm_client: QwenLLM):
+        self.tool_executor = tool_executor
+        self.llm = llm_client
+
+    async def execute_task(self, node: TaskNode, dag: DAG) -> str:
+        """执行单个任务"""
+        node.status = "running"
+
+        resolved_args = self._resolve_arguments(node.arguments, dag)
+
+        try:
+            if node.tool_name == "LLM":
+                result = self.llm.think([{"role": "user", "content": resolved_args}]).strip()
+            else:
+                result = self.tool_executor.execute_tool(node.tool_name, resolved_args)
+
+            node.result = result
+            node.status = "completed"
+            return result
+        except Exception as e:
+            node.status = "failed"
+            node.result = f"Error: {str(e)}"
+            raise
+
+    async def execute_ready_tasks(self, dag: DAG) -> List[Tuple[str, str]]:
+        """并行执行所有就绪任务"""
         ready_tasks = dag.get_ready_tasks()
-        
         if not ready_tasks:
             return []
-        
-        print(f"\n--- Task Fetching Unit: 执行就绪任务 ---")
-        for task in ready_tasks:
-            print(f"  执行: {task.id} - {task.description}")
-        
-        executed_tasks = []
-        for task in ready_tasks:
-            result = self._execute_task(task)
-            dag.mark_complete(task.id, result)
-            executed_tasks.append(task)
-        
-        return executed_tasks
-    
-    def _execute_task(self, task: Task) -> str:
-        prompt = TASK_EXECUTION_PROMPT.format(task_description=task.description)
-        result = self.llm_client.think([{"role": "user", "content": prompt}])
-        print(f"    结果: {result[:100]}..." if len(result) > 100 else f"    结果: {result}")
-        return result
+
+        tasks = [self.execute_task(node, dag) for node in ready_tasks]
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+
+        completed = []
+        for node, result in zip(ready_tasks, results):
+            if isinstance(result, Exception):
+                completed.append((node.task_id, str(result)))
+            else:
+                completed.append((node.task_id, result))
+
+        return completed
+
+    def _resolve_arguments(self, arguments: str, dag: DAG) -> str:
+        """解析参数中的依赖引用（如 #T1）"""
+        resolved = arguments
+
+        if resolved.strip().startswith("{") and resolved.strip().endswith("}"):
+            try:
+                json_str = resolved.strip()
+                if "'" in json_str and '"' not in json_str:
+                    json_str = json_str.replace("'", '"')
+                parsed = json.loads(json_str)
+                if isinstance(parsed, dict):
+                    for key, value in parsed.items():
+                        if isinstance(value, str) and value.startswith("#T"):
+                            task_id = value[1:]
+                            if task_id in dag.nodes and dag.nodes[task_id].result is not None:
+                                parsed[key] = dag.nodes[task_id].result
+                    resolved = json.dumps(parsed, ensure_ascii=False)
+            except json.JSONDecodeError:
+                pass
+
+        def replacer(match):
+            ref = match.group(0)
+            task_id = ref[1:]
+            if task_id in dag.nodes and dag.nodes[task_id].result is not None:
+                return dag.nodes[task_id].result
+            return ref
+
+        resolved = re.sub(r'#T\d+', replacer, resolved)
+
+        return resolved
 
 
 class JoiningUnit:
+    """Joining Unit - 结果聚合"""
+
+    SOLVER_PROMPT = """
+        请根据以下任务和执行结果，给出最终答案。
+        
+        任务：{task}
+        
+        执行过程：
+        {execution_summary}
+        
+        请基于上述执行结果回答问题，仅输出最终答案。
+    """
+
     def __init__(self, llm_client: QwenLLM):
-        self.llm_client = llm_client
-    
-    def aggregate(self, question: str, dag: DAG) -> str:
-        results_str = "\n".join(
-            f"任务 {task.id}: {task.description}\n结果: {task.result}\n"
-            for task in dag.tasks.values()
+        self.llm = llm_client
+
+    def generate_final_answer(self, task: str, dag: DAG) -> str:
+        """生成最终答案"""
+        execution_summary = self._build_execution_summary(dag)
+
+        prompt = self.SOLVER_PROMPT.format(
+            task=task,
+            execution_summary=execution_summary
         )
-        
-        prompt = f"""
-            基于以下子任务的执行结果，为原始问题提供完整的最终答案。
-            
-            原始问题: {question}
-            
-            子任务执行结果:
-            {results_str}
-            
-            请提供完整、准确的最终答案，整合所有子任务的结果:
-        """
-        final_answer = self.llm_client.think([{"role": "user", "content": prompt}])
-        
-        print(f"\n--- Joining Unit: 最终答案 ---")
-        print(f"{final_answer}")
-        return final_answer
+
+        return self.llm.think([{"role": "user", "content": prompt}]).strip()
+
+    def _build_execution_summary(self, dag: DAG) -> str:
+        """构建执行摘要"""
+        lines = []
+        for task_id in sorted(dag.nodes.keys()):
+            node = dag.nodes[task_id]
+            deps_str = ", ".join(node.dependencies) if node.dependencies else "无"
+            lines.append(f"{task_id}: {node.tool_name}[{node.arguments}]")
+            lines.append(f"  依赖: {deps_str}")
+            lines.append(f"  结果: {node.result}")
+            lines.append("")
+        return "\n".join(lines)
 
 
-class LLMCompiler:
-    def __init__(self, llm_client: QwenLLM):
-        self.planner = FunctionCallingPlanner(llm_client)
-        self.task_fetcher = TaskFetchingUnit(llm_client)
+class LLMCompilerAgent:
+    """LLMCompilerAgent 主类 - 协调三个核心组件"""
+
+    def __init__(self, llm_client: QwenLLM, tool_executor: ToolExecutor):
+        self.planner = FunctionCallingPlanner(llm_client, tool_executor)
+        self.task_fetcher = TaskFetchingUnit(tool_executor, llm_client)
         self.joiner = JoiningUnit(llm_client)
-    
-    def run(self, question: str) -> str:
-        print("=" * 60)
-        print("LLMCompiler Agent - 并行任务执行")
-        print("=" * 60)
-        
-        dag = self.planner.plan(question)
-        
-        print(f"\n--- 开始执行任务 DAG ---")
-        iteration = 0
-        while not dag.is_complete():
-            iteration += 1
-            print(f"\n迭代 {iteration}:")
-            executed = self.task_fetcher.execute_ready_tasks(dag)
-            
-            if not executed:
-                print("  没有可执行的任务，可能存在循环依赖")
-                break
-        
-        final_answer = self.joiner.aggregate(question, dag)
-        
-        print(f"\n--- 执行完成 ---")
-        print(f"总任务数: {len(dag.tasks)}")
-        print(f"迭代次数: {iteration}")
-        
+
+    def run(self, task: str) -> str:
+        """执行 LLMCompiler 流程"""
+        print("=== Step 1: Function Calling Planner (生成 DAG) ===")
+        dag = self.planner.generate_plan(task)
+        self._print_dag(dag)
+
+        print("\n=== Step 2: Task Fetching Unit (并行执行) ===")
+        asyncio.run(self._execute_dag(dag))
+        self._print_execution_results(dag)
+
+        print("\n=== Step 3: Joining Unit (结果聚合) ===")
+        final_answer = self.joiner.generate_final_answer(task, dag)
+        print(f"\n--- Final Answer ---\n{final_answer}")
+
         return final_answer
+
+    async def _execute_dag(self, dag: DAG):
+        """执行 DAG 直到完成"""
+        iteration = 1
+        while not dag.is_complete():
+            print(f"\n[迭代 {iteration}] 执行就绪任务...")
+            completed = await self.task_fetcher.execute_ready_tasks(dag)
+
+            if not completed:
+                print("没有就绪任务，可能存在循环依赖或错误")
+                break
+
+            for task_id, result in completed:
+                print(f"  {task_id} 完成: {result[:100]}...")
+
+            iteration += 1
+
+            if iteration > 100:
+                print("执行超过 100 次迭代，停止")
+                break
+
+    def _print_dag(self, dag: DAG):
+        """打印 DAG 结构"""
+        print("执行计划 DAG:")
+        for task_id in sorted(dag.nodes.keys()):
+            node = dag.nodes[task_id]
+            deps_str = ", ".join(node.dependencies) if node.dependencies else "无"
+            print(f"  {task_id}: {node.tool_name}[{node.arguments}]")
+            print(f"      依赖: {deps_str}")
+
+    def _print_execution_results(self, dag: DAG):
+        """打印执行结果"""
+        print("\n执行结果:")
+        for task_id in sorted(dag.nodes.keys()):
+            node = dag.nodes[task_id]
+            status_icon = "✓" if node.status == "completed" else "✗"
+            print(f"  {status_icon} {task_id}: {node.result}")
 
 
 if __name__ == "__main__":
     load_dotenv()
-    api_key = os.getenv("DASHSCOPE_API_KEY")
-    base_url = os.getenv("DASHSCOPE_API_URL")
+    llm = QwenLLM(
+        api_key=os.getenv("DASHSCOPE_API_KEY"),
+        base_url=os.getenv("DASHSCOPE_API_URL"),
+        model_name="qwen-plus"
+    )
+    tool_executor = ToolExecutor()
 
-    llm = QwenLLM(api_key=api_key, base_url=base_url, model_name="qwen-plus")
+    print("=" * 60)
+    print("LLMCompiler Agent")
+    print("=" * 60)
 
-    compiler = LLMCompiler(llm_client=llm)
-    compiler.run("llm_compiler agent设计范式如何用Java代码实现")
+    compiler = LLMCompilerAgent(llm, tool_executor)
+    compiler.run("今天距离2026年春节还有多少天？")

@@ -1,130 +1,184 @@
 """
-Reason without Observation Agent 示例实现
+ReWOO Agent
+- Plan 格式: Plan: ... \n#E1 = Tool[参数]
+- 占位符: #E1, #E2
+- 支持 LLM[...] 内部推理
 """
+
 import os
 import re
-from typing import Dict, Any
+from typing import Dict, List, Tuple
 from dotenv import load_dotenv
 from qwen_llm import QwenLLM
+from sample.tools import ToolExecutor
 
+# =========================
+# Planner Prompt（动态工具 + 提取示例）
+# =========================
+PLANNER_PROMPT_BASE = """
+请为以下任务制定一个逐步解决问题的计划。对于每一步计划，请明确指出应调用哪个外部工具及输入参数，以获取证据。  
+你可以将证据存入变量 `#E` 中，供后续步骤引用（格式如：Plan, #E1, Plan, #E2, ...）。
 
-# 模拟工具（实际可替换为 API 调用）
-def mock_weather_tool(city: str) -> str:
-    return f"今天 {city} 的天气晴朗，气温 25°C。"
+可用工具如下：
+{tool_descriptions}
 
+【示例：数学计算】
+任务：一个长方体水箱长 2 米、宽 1.5 米、高 1 米。若每分钟注水 0.3 立方米，注满需要多少分钟？
+Plan: 计算水箱的总体积（立方米）。
+#E1 = LLM[计算 2 * 1.5 * 1]
+Plan: 用总体积除以注水速率，得到所需时间（分钟）。
+#E2 = LLM[计算 #E1 / 0.3]
 
-def mock_search_tool(query: str) -> str:
-    if "防晒" in query:
-        return "专家建议：晴天外出应涂抹 SPF30+ 防晒霜，并戴帽子。"
-    return "未找到相关信息。"
+开始！请为以下任务制定详细计划。每个 Plan 后只能跟一个 #E 变量。
 
-
-TOOL_REGISTRY = {
-    "get_weather": mock_weather_tool,
-    "search": mock_search_tool,
-}
-
-# ====== 1. Planner Prompt（生成带占位符的 Plan）======
-PLANNER_PROMPT_TEMPLATE = """
-你是一个高效的任务规划器。你的目标是生成一个完整的推理计划，用于解决用户的问题。
-在计划中，你可以使用以下工具（按需调用）：
-- get_weather(city): 获取某城市的当前天气
-- search(query): 搜索相关信息
-
-请按以下格式输出计划，仅使用工具调用和自然语言推理，不要直接给出最终答案：
-
-Plan:
-1. [步骤1描述] → ${{e1}}
-2. [步骤2描述] → ${{e2}}
-...
-Final Answer: 根据以上信息，[简要说明如何得出答案]
-
-问题: {question}
+任务：{task}
 """
 
 
-# ====== 2. ReWOO Agent ======
-class ReWOOAgent:
-    def __init__(self, llm_client: QwenLLM):
-        self.llm_client = llm_client
+# =========================
+# Planner
+# =========================
+class ReWOOPlanner:
+    def __init__(self, llm_client: QwenLLM, tool_executor: ToolExecutor):
+        self.llm = llm_client
+        self.tool_executor = tool_executor
 
-    def _generate_plan(self, question: str) -> str:
-        prompt = PLANNER_PROMPT_TEMPLATE.format(question=question)
-        messages = [{"role": "user", "content": prompt}]
-        plan = self.llm_client.think(messages)
-        return plan
+    def generate_plan(self, task: str) -> List[Tuple[str, str, str, str]]:
+        tool_desc = self.tool_executor.get_tool_descriptions()
+        prompt = PLANNER_PROMPT_BASE.format(
+            tool_descriptions=tool_desc,
+            task=task
+        )
+        response = self.llm.think([{"role": "user", "content": prompt}]).strip()
 
-    def _parse_plan(self, plan: str) -> tuple[list, str]:
-        # 提取步骤（含占位符和工具调用）
+        # 匹配 Plan 和 #E（兼容 [...] 或 (...)）
+        pattern = r"Plan:\s*(.+?)\s*(#E\d+)\s*=\s*(\w+)\s*[\[\(]([^\]\)]*)[\]\)]"
+        matches = re.findall(pattern, response, re.DOTALL)
+
         steps = []
-        for line in plan.split("\n"):
-            if "→ ${e" in line:
-                # 匹配两种格式:
-                # 1. "1. 获取北京天气 → ${e1}"
-                # 2. "1. 获取北京天气 → ${e1 = get_weather("北京")}"
-                match = re.search(r"(.+?)→\s*\$\{e(\d+)\s*=?([^}]*)}", line)
-                if match:
-                    desc = match.group(1).strip()
-                    var_id = int(match.group(2))
-                    tool_call = match.group(3).strip()
-                    steps.append((var_id, desc, tool_call))
-        # 提取 Final Answer 模板
-        final_match = re.search(r"Final Answer:\s*(.*)", plan, re.DOTALL)
-        final_template = final_match.group(1).strip() if final_match else ""
-        return steps, final_template
+        for plan_desc, var_name, tool_name, arg in matches:
+            # 去除参数首尾引号
+            arg = arg.strip()
+            if arg.startswith('"') and arg.endswith('"'):
+                arg = arg[1:-1]
+            elif arg.startswith("'") and arg.endswith("'"):
+                arg = arg[1:-1]
+            steps.append((plan_desc.strip(), var_name, tool_name, arg))
+        return steps
 
-    def _execute_plan(self, steps: list[tuple[int, str, str]]) -> Dict[str, str]:
-        results: Dict[str, str] = {}
-        for var_id, desc, tool_call in sorted(steps, key=lambda x: x[0]):
-            if "get_weather" in tool_call:
-                city = re.search(r"[\u4e00-\u9fa5a-zA-Z]+", tool_call.replace("get_weather", "").replace("(", "").replace(")", "").replace('"', ""))
-                city_name = city.group(0) if city else "北京"
-                results[f"e{var_id}"] = TOOL_REGISTRY["get_weather"](city_name)
-            elif "search" in tool_call:
-                query = re.search(r"[\u4e00-\u9fa5a-zA-Z0-9\s]+", tool_call.replace("search", "").replace("(", "").replace(")", "").replace('"', ""))
-                query_str = query.group(0).strip() if query else "防晒建议"
-                results[f"e{var_id}"] = TOOL_REGISTRY["search"](query_str)
+
+# =========================
+# Worker（带 LLM 提取后处理）
+# =========================
+class ReWOOWorker:
+    def __init__(self, llm_client: QwenLLM, tool_executor: ToolExecutor):
+        self.llm_client = llm_client
+        self.tool_executor = tool_executor
+
+    def execute_plan(self, steps: List[Tuple[str, str, str, str]]) -> Dict[str, str]:
+        evidence: Dict[str, str] = {}
+        for plan_desc, var_name, tool_name, raw_arg in steps:
+            resolved_arg = self._resolve_placeholders(raw_arg, evidence)
+
+            if tool_name == "LLM":
+                evidence[var_name] = self.llm_client.think([{"role": "user", "content": resolved_arg}]).strip()
             else:
-                results[f"e{var_id}"] = "无需工具，纯推理步骤（本示例未实现）"
-        return results
+                evidence[var_name] = self.tool_executor.execute_tool(tool_name, resolved_arg)
+        return evidence
 
-    def run(self, question: str) -> str:
-        print("=== Step 1: 生成 Plan ===")
-        plan = self._generate_plan(question)
-        print(plan)
+    def _resolve_placeholders(self, text: str, evidence: Dict[str, str]) -> str:
+        def replacer(match):
+            var = match.group(0)  # #E1
+            return evidence.get(var, var)
 
-        print("\n=== Step 2: 解析并执行 Plan ===")
-        steps, final_template = self._parse_plan(plan)
-        evidence = self._execute_plan(steps)
+        return re.sub(r"#E\d+", replacer, text)
 
-        print(f"\nfinal Answer 模板: {final_template}")
-        print(f"\nevidence: {evidence}")
 
-        # 填充占位符
-        final_context = final_template
-        for key, value in evidence.items():
-            final_context = final_context.replace(f"${{{key}}}", value)
+# =========================
+# Solver
+# =========================
+SOLVER_PROMPT_TEMPLATE = """
+    请根据以下任务、分步计划及每步的执行结果，直接给出最终答案。
+    
+    {full_plan_with_evidence}
+    
+    请基于上述证据回答问题，**不要包含任何解释、前缀或多余文字**，仅输出最终答案。
+    
+    任务：{task}
+    回答：
+"""
 
-        print(f"\n填充后的上下文: {final_context}")
 
-        print("\n=== Step 3: 生成最终答案 ===")
-        solver_prompt = f"基于以下信息，直接回答问题：\n{final_context}"
-        final_answer = self.llm_client.think([{"role": "user", "content": solver_prompt}])
-        print(final_answer)
+class ReWOOSolver:
+    def __init__(self, llm_client: QwenLLM):
+        self.llm = llm_client
+
+    def solve(self, task: str, steps: List[Tuple], evidence: Dict[str, str]) -> str:
+        plan_lines = []
+        for plan_desc, var_name, tool_name, raw_arg in steps:
+            resolved_arg = self._resolve_placeholders(raw_arg, evidence)
+            plan_lines.append(f"Plan: {plan_desc}")
+            plan_lines.append(f"{var_name} = {tool_name}[{resolved_arg}] → {evidence.get(var_name, '')}")
+        full_plan = "\n".join(plan_lines)
+
+        prompt = SOLVER_PROMPT_TEMPLATE.format(
+            full_plan_with_evidence=full_plan,
+            task=task
+        )
+        return self.llm.think([{"role": "user", "content": prompt}]).strip()
+
+    def _resolve_placeholders(self, text: str, evidence: Dict[str, str]) -> str:
+        def replacer(match):
+            var = match.group(0)
+            return evidence.get(var, var)
+
+        return re.sub(r"#E\d+", replacer, text)
+
+
+# =========================
+# ReWOO Agent
+# =========================
+class ReWOOAgent:
+    def __init__(self, llm_client: QwenLLM, tool_executor: ToolExecutor):
+        self.planner = ReWOOPlanner(llm_client, tool_executor)
+        self.worker = ReWOOWorker(llm_client, tool_executor)
+        self.solver = ReWOOSolver(llm_client)
+
+    def run(self, task: str) -> str:
+        print("=== Step 1: Planner ===")
+        steps = self.planner.generate_plan(task)
+        if not steps:
+            raise ValueError("Planner 未生成有效计划，请重试或调整任务。")
+        for desc, var, tool, arg in steps:
+            print(f"Plan: {desc}")
+            print(f"{var} = {tool}[{arg}]")
+
+        print("\n=== Step 2: Worker ===")
+        evidence = self.worker.execute_plan(steps)
+        for k, v in evidence.items():
+            print(f"{k}: {v}")
+
+        print("\n=== Step 3: Solver ===")
+        final_answer = self.solver.solve(task, steps, evidence)
+        print(f"\n--- Final Answer ---\n{final_answer}")
         return final_answer
 
 
-# ====== 3. 主程序 ======
+# =========================
+# Main
+# =========================
 if __name__ == "__main__":
     load_dotenv()
-    api_key = os.getenv("DASHSCOPE_API_KEY")
-    base_url = os.getenv("DASHSCOPE_API_URL")
-    llm = QwenLLM(api_key=api_key, base_url=base_url, model_name="qwen-plus")
+    llm = QwenLLM(
+        api_key=os.getenv("DASHSCOPE_API_KEY"),
+        base_url=os.getenv("DASHSCOPE_API_URL"),
+        model_name="qwen-plus"
+    )
+    tool_executor = ToolExecutor()
 
     print("=" * 60)
-    print("ReWOO Agent 示例（Reason without Observation）")
-    print("特点：先规划 → 再执行（调用工具）→ 最后回答")
+    print("ReWOO Agent")
     print("=" * 60)
 
-    agent = ReWOOAgent(llm)
-    agent.run("在北京今天出门需要涂防晒霜吗？")
+    agent = ReWOOAgent(llm, tool_executor)
+    agent.run("今天距离2026年春节还有多少天？")

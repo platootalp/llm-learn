@@ -9,7 +9,7 @@ import re
 from typing import Dict, Callable, List, Optional, Tuple
 from dotenv import load_dotenv
 from qwen_llm import QwenLLM
-from sample.tools import ToolExecutor, create_tavily_search_tool, create_date_diff_tool
+from sample.tools import ToolExecutor
 
 
 # =========================
@@ -126,16 +126,6 @@ if __name__ == "__main__":
 
     # 初始化工具
     tool_executor = ToolExecutor()
-    tool_executor.register_tool(
-        name="Search",
-        func=create_tavily_search_tool(os.getenv("TAVILY_API_KEY")),
-        description="搜索最新网络信息，用于回答事实性问题"
-    )
-    tool_executor.register_tool(
-        name="Date_diff",
-        func=create_date_diff_tool(),
-        description="计算两个日期的时间差（单位：day）"
-    )
     # 运行 Agent
     agent = ReActAgent(llm, tool_executor, max_steps=5)
     question = ("今天股票市场行情如何？")
@@ -144,8 +134,7 @@ if __name__ == "__main__":
     print("ReAct Agent")
     print("=" * 60)
 
-    print(f"Question: {question}")
-    print("=" * 50)
+    print(f"\nQuestion: {question}")
     answer = agent.run(question)
 
     print("\n" + "=" * 50)
