@@ -140,6 +140,10 @@ if __name__ == "__main__":
     agent = ReActAgent(llm, tool_executor, max_steps=5)
     question = ("今天股票市场行情如何？")
     # question = ("今天距离2026年春节还有多少天？")
+    print("=" * 60)
+    print("ReAct Agent")
+    print("=" * 60)
+
     print(f"Question: {question}")
     print("=" * 50)
     answer = agent.run(question)

@@ -1,36 +1,38 @@
 """
 Plan-Solve Agent 示例实现
-- 包含 Plan / Solve 的智能体循环
-- 使用 Qwen 模型，进行规划和执行
+- Planner: 生成计划
+- ExecutionState: 封装执行状态
+- Executor: 执行步骤（无状态）
+- PlanSolveAgent: 协调流程
 """
 
 import os
 import re
-from typing import List, Dict
+import ast
+from typing import List, Dict, Optional
 from dotenv import load_dotenv
 from qwen_llm import QwenLLM
 
 # =========================
-# Plan-Solve Agent
+# 提示模板
 # =========================
-
 PLANNER_PROMPT_TEMPLATE = """
-你是一个顶级的AI规划专家。你的任务是将用户提出的复杂问题分解成一个由多个简单步骤组成的行动计划。
-请确保计划中的每个步骤都是一个独立的、可执行的子任务，并且严格按照逻辑顺序排列。
-你的输出必须是一个Python列表，其中每个元素都是一个描述子任务的字符串。
+你是一个顶级的AI规划专家。请将用户提出的复杂问题分解为一个清晰、有序、可执行的行动计划。
+要求：
+1. 每个步骤必须是独立、具体的子任务；
+2. 步骤之间应有明确的逻辑顺序；
+3. 不要包含解释、编号前缀或多余文本。
 
 问题: {question}
 
-请严格按照以下格式输出你的计划,```python与```作为前后缀是必要的:
+请严格按以下格式输出（必须包含 ```python 和 ```）：
 ```python
-["步骤1", "步骤2", "步骤3", ...]
+["子任务1描述", "子任务2描述", "子任务3描述", ...]
 ```
 """
 
 EXECUTOR_PROMPT_TEMPLATE = """
-你是一位顶级的AI执行专家。你的任务是严格按照给定的计划，一步步地解决问题。
-你将收到原始问题、完整的计划、以及到目前为止已经完成的步骤和结果。
-请你专注于解决"当前步骤"，并仅输出该步骤的最终答案，不要输出任何额外的解释或对话。
+你是一位顶级的AI执行专家。请严格按计划执行当前步骤。
 
 # 原始问题:
 {question}
@@ -38,129 +40,194 @@ EXECUTOR_PROMPT_TEMPLATE = """
 # 完整计划:
 {plan}
 
-# 历史步骤与结果:
+# 已完成的步骤与结果:
 {history}
 
-# 当前步骤:
+# 当前要执行的步骤:
 {current_step}
 
-请仅输出针对"当前步骤"的回答:
+注意：你可以自由使用“已完成的步骤与结果”中的信息。请仅输出当前步骤的最终答案，不要任何解释、前缀或后缀。
+"""
+
+FINAL_ANSWER_PROMPT_TEMPLATE = """
+你是一个专业的AI助手。请根据以下任务执行过程，生成一个简洁、完整、面向用户的最终回答。
+
+# 原始问题:
+{question}
+
+# 执行过程摘要:
+{execution_summary}
+
+请直接输出最终答案，语言自然流畅，不要提及“根据以上内容”或重复步骤编号。
 """
 
 
-class PlanSolveAgent:
-    """
-    Plan-Solve 智能体
-    - Plan: 将复杂问题分解为多个步骤
-    - Solve: 逐步执行每个步骤
-    """
+# =========================
+# 1. ExecutionState: 状态管理
+# =========================
+class ExecutionState:
+    def __init__(self, plan: List[str]):
+        if not plan:
+            raise ValueError("计划不能为空")
+        self.plan = plan
+        self._history: List[Dict[str, str]] = []  # 每项: {"step": str, "result": str}
 
+    @property
+    def history(self) -> List[Dict[str, str]]:
+        return self._history.copy()  # 避免外部修改
+
+    def is_completed(self) -> bool:
+        return len(self._history) >= len(self.plan)
+
+    def get_current_step(self) -> Optional[str]:
+        if self.is_completed():
+            return None
+        return self.plan[len(self._history)]
+
+    def get_step_index(self) -> int:
+        return len(self._history)
+
+    def add_result(self, result: str):
+        if self.is_completed():
+            raise RuntimeError("计划已执行完毕，无法添加新结果")
+        step = self.plan[len(self._history)]
+        self._history.append({"step": step, "result": result})
+
+    def get_history_str(self) -> str:
+        if not self._history:
+            return "无"
+        return "\n".join(
+            f"步骤: {h['step']}\n结果: {h['result']}" for h in self._history
+        )
+
+    def get_execution_summary(self) -> str:
+        return "\n".join(f"- {h['step']}: {h['result']}" for h in self._history)
+
+
+# =========================
+# 2. Planner: 规划器
+# =========================
+class Planner:
     def __init__(self, llm_client: QwenLLM):
-        self.llm_client = llm_client
+        self.llm = llm_client
 
-    def plan(self, question: str) -> List[str]:
-        """
-        生成初始计划
-        """
+    def generate_plan(self, question: str) -> List[str]:
         prompt = PLANNER_PROMPT_TEMPLATE.format(question=question)
-        response = self.llm_client.think([{"role": "user", "content": prompt}])
-
-        plan = self._extract_python_list(response)
-        print(f"\n--- 生成的计划 ---")
-        for i, step in enumerate(plan, 1):
-            print(f"{i}. {step}")
+        response = self.llm.think([{"role": "user", "content": prompt}])
+        plan = self._parse_plan(response)
+        if not plan:
+            raise ValueError("规划失败：未能生成有效计划。")
         return plan
 
-    def solve(self, question: str, plan: List[str], history: List[Dict[str, str]]) -> str:
-        """
-        执行当前步骤
-        """
-        current_step = plan[len(history)]
-        history_str = self._format_history(history)
+    def _parse_plan(self, text: str) -> List[str]:
+        match = re.search(r"```(?:python)?\s*(\[.*?])\s*```", text, re.DOTALL)
+        if not match:
+            match = re.search(r"(\[.*?])", text, re.DOTALL)
+        if match:
+            try:
+                parsed = ast.literal_eval(match.group(1))
+                if isinstance(parsed, list):
+                    return [str(item).strip() for item in parsed if str(item).strip()]
+            except (SyntaxError, ValueError):
+                pass
+        return []
+
+
+# =========================
+# 3. Executor: 执行器
+# =========================
+class Executor:
+    def __init__(self, llm_client: QwenLLM):
+        self.llm = llm_client
+
+    def execute_step(self, question: str, state: ExecutionState) -> str:
+        current_step = state.get_current_step()
+        if current_step is None:
+            raise RuntimeError("无法执行：计划已完成")
 
         prompt = EXECUTOR_PROMPT_TEMPLATE.format(
             question=question,
-            plan=str(plan),
-            history=history_str,
+            plan=str(state.plan),
+            history=state.get_history_str(),
             current_step=current_step
         )
 
-        result = self.llm_client.think([{"role": "user", "content": prompt}])
-        print(f"\n--- 执行步骤: {current_step} ---")
-        print(f"结果: {result}")
-        return result
+        result = self.llm.think([{"role": "user", "content": prompt}]).strip()
+        return result if result else "[空结果]"
+
+    def generate_final_answer(self, question: str, state: ExecutionState) -> str:
+        prompt = FINAL_ANSWER_PROMPT_TEMPLATE.format(
+            question=question,
+            execution_summary=state.get_execution_summary()
+        )
+        return self.llm.think([{"role": "user", "content": prompt}]).strip()
+
+
+# =========================
+# 4. PlanSolveAgent: 协调器
+# =========================
+class PlanSolveAgent:
+    def __init__(self, llm_client: QwenLLM):
+        self.planner = Planner(llm_client)
+        self.executor = Executor(llm_client)
 
     def run(self, question: str) -> str:
-        """
-        运行 Plan-Solve 主循环
-        """
-        plan = self.plan(question)
-        history: List[Dict[str, str]] = []
+        # 1. 规划
+        plan = self.planner.generate_plan(question)
+        self._print_plan(plan)
 
-        while len(history) < len(plan):
-            result = self.solve(question, plan, history)
-            history.append({
-                "step": plan[len(history) - 1],
-                "result": result
-            })
+        # 2. 执行
+        state = ExecutionState(plan)
+        while not state.is_completed():
+            result = self.executor.execute_step(question, state)
+            self._print_step(state.get_step_index() + 1, len(plan), state.get_current_step(), result)
+            state.add_result(result)
 
-        final_answer = self._generate_final_answer(question, history)
-        print(f"\n--- 最终答案 ---")
-        print(f"{final_answer}")
+        # 3. 合成最终答案
+        final_answer = self.executor.generate_final_answer(question, state)
+        print(f"\n--- 最终答案 ---\n{final_answer}")
         return final_answer
 
-    def _extract_python_list(self, text: str) -> List[str]:
-        """
-        从文本中提取 Python 列表
-        """
-        match = re.search(r"```python\s*\[(.*?)\]\s*```", text, re.DOTALL)
-        if match:
-            items = [item.strip().strip('"\'') for item in match.group(1).split(",")]
-            return [item for item in items if item]
-        return []
+    def _print_plan(self, plan: List[str]):
+        print(f"\n--- 生成的计划 ---")
+        for i, step in enumerate(plan, 1):
+            print(f"{i}. {step}")
 
-    def _format_history(self, history: List[Dict[str, str]]) -> str:
-        """
-        格式化历史记录
-        """
-        if not history:
-            return "无"
-        return "\n".join(
-            f"步骤: {h['step']}\n结果: {h['result']}\n"
-            for h in history
-        )
-
-    def _generate_final_answer(self, question: str, history: List[Dict[str, str]]) -> str:
-        """
-        生成最终答案（不调用大模型，直接基于历史记录生成）
-        """
-        if not history:
-            return "未找到执行结果"
-        
-        answer_parts = [f"问题: {question}\n"]
-        answer_parts.append("执行过程:\n")
-        
-        for i, h in enumerate(history, 1):
-            answer_parts.append(f"{i}. {h['step']}\n")
-            answer_parts.append(f"   {h['result']}\n")
-        
-        return "".join(answer_parts)
+    def _print_step(self, step_num: int, total: int, step_desc: str, result: str):
+        print(f"\n--- 执行步骤 [{step_num}/{total}]: {step_desc} ---")
+        print(f"结果: {result}")
 
 
 # =========================
 # 示例运行
 # =========================
-
 if __name__ == "__main__":
     load_dotenv()
     api_key = os.getenv("DASHSCOPE_API_KEY")
     base_url = os.getenv("DASHSCOPE_API_URL")
 
+    if not api_key:
+        raise ValueError("请在 .env 中配置 DASHSCOPE_API_KEY")
+
     llm = QwenLLM(api_key=api_key, base_url=base_url, model_name="qwen-plus")
 
     print("=" * 60)
-    print("Plan-Solve Agent 示例")
+    print("Plan-Solve Agent")
     print("=" * 60)
 
-    ps_agent = PlanSolveAgent(llm_client=llm)
-    ps_agent.run("Agent开发工程师学习路线")
+    agent = PlanSolveAgent(llm_client=llm)
+    try:
+        agent.run("""
+           你正在把积木堆成金字塔。每个块都有一个颜色，用一个字母表示。每一行的块比它下面的行 少一个块 ，并且居中。
+           为了使金字塔美观，只有特定的 三角形图案 是允许的。一个三角形的图案由 两个块 和叠在上面的 单个块 组成。模式是以三个字母字符串的列表形式 allowed 给出的，其中模式的前两个字符分别表示左右底部块，第三个字符表示顶部块。
+           例如，"ABC" 表示一个三角形图案，其中一个 “C” 块堆叠在一个 'A' 块(左)和一个 'B' 块(右)之上。请注意，这与 "BAC" 不同，"B" 在左下角，"A" 在右下角。
+           你从作为单个字符串给出的底部的一排积木 bottom 开始，必须 将其作为金字塔的底部。
+           在给定 bottom 和 allowed 的情况下，如果你能一直构建到金字塔顶部，使金字塔中的 每个三角形图案 都是在 allowed 中的，则返回 true ，否则返回 false 。
+           请用Java代码实现class Solution {
+               public boolean pyramidTransition(String bottom, List<String> allowed) {
+
+               }
+           }
+        """)
+    except Exception as e:
+        print(f"执行出错: {e}")
