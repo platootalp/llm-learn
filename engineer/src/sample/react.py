@@ -120,8 +120,7 @@ if __name__ == "__main__":
     # 初始化 LLM
     llm = QwenLLM(
         api_key=os.getenv("DASHSCOPE_API_KEY"),
-        base_url=os.getenv("DASHSCOPE_API_URL"),
-        model_name="qwen-plus"
+        base_url=os.getenv("DASHSCOPE_API_URL")
     )
 
     # 初始化工具

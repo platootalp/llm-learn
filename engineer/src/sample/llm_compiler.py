@@ -352,8 +352,7 @@ if __name__ == "__main__":
     load_dotenv()
     llm = QwenLLM(
         api_key=os.getenv("DASHSCOPE_API_KEY"),
-        base_url=os.getenv("DASHSCOPE_API_URL"),
-        model_name="qwen-plus"
+        base_url=os.getenv("DASHSCOPE_API_URL")
     )
     tool_executor = ToolExecutor()
 

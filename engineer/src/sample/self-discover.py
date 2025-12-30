@@ -7,9 +7,13 @@ Self-Discover - 大语言模型的自我发现推理框架
 """
 
 import json
+import os
+import re
 from typing import List, Dict, Any
-from qwen_llm import QwenLLM
 
+from dotenv import load_dotenv
+
+from qwen_llm import QwenLLM
 
 # =========================
 # 原子推理模块库（40+ 个模块）
@@ -59,20 +63,15 @@ REASONING_MODULES = {
 
 
 # =========================
-# Self-Discover Agent
+# Select 组件
 # =========================
-class SelfDiscoverAgent:
+class SelectComponent:
     def __init__(self, llm_client: QwenLLM):
         self.llm = llm_client
 
     def select(self, task: str) -> List[str]:
-        """
-        Select 阶段：从原子推理模块库中选择与任务相关的模块
-        
-        输出：选中的模块列表
-        """
         modules_list = "\n".join([f"- {name}: {desc}" for name, desc in REASONING_MODULES.items()])
-        
+
         prompt = f"""
             你是一个推理架构师。请为以下任务选择最相关的原子推理模块。
             
@@ -88,9 +87,9 @@ class SelfDiscoverAgent:
                 "selected_modules": ["模块名1", "模块名2", ...]
             }}
         """
-        
+
         response = self.llm.think([{"role": "user", "content": prompt}]).strip()
-        
+
         try:
             json_match = self._extract_json(response)
             if json_match:
@@ -98,20 +97,38 @@ class SelfDiscoverAgent:
                 return data.get("selected_modules", [])
         except Exception as e:
             print(f"Select 阶段解析失败: {e}")
-        
+
         return []
 
-    def adapt(self, task: str, selected_modules: List[str]) -> Dict[str, Any]:
-        """
-        Adapt 阶段：将选中的模块适应到具体任务，生成推理结构
-        
-        输出：结构化的推理结构（JSON 格式）
-        """
+    def _extract_json(self, text: str) -> str:
+        json_match = re.search(r'\{[\s\S]*}', text)
+        if json_match:
+            return json_match.group(0)
+        return ""
+
+
+# =========================
+# Adapt 组件
+# =========================
+class AdaptComponent:
+    def __init__(self, llm_client: QwenLLM):
+        self.llm = llm_client
+
+    def adapt(self, task: str, selected_modules: List[str]) -> List[Dict[str, Any]]:
+        print(f"\n[Adapt] 开始适应推理模块到任务...")
+        print(f"[Adapt] 任务: {task}")
+
+        print(f"\n[Adapt] 选中的模块 ({len(selected_modules)} 个):")
+        for i, name in enumerate(selected_modules, 1):
+            desc = REASONING_MODULES.get(name, "无描述")
+            print(f"  {i}. {name}")
+            print(f"     描述: {desc}")
+
         modules_desc = "\n".join([
-            f"- {name}: {REASONING_MODULES.get(name, '')}" 
+            f"- {name}: {REASONING_MODULES.get(name, '')}"
             for name in selected_modules
         ])
-        
+
         prompt = f"""
             你是一个推理结构设计专家。请将选中的推理模块适应到具体任务，生成一个推理结构。
             
@@ -134,58 +151,108 @@ class SelfDiscoverAgent:
                 ]
             }}
         """
-        
+
+        print(f"\n[Adapt] 正在生成推理结构...")
         response = self.llm.think([{"role": "user", "content": prompt}]).strip()
-        
+
         try:
             json_match = self._extract_json(response)
             if json_match:
                 data = json.loads(json_match)
-                return data.get("reasoning_structure", [])
+                reasoning_structure = data.get("reasoning_structure", [])
+
+                print(f"\n[Adapt] 解析成功！生成推理结构 ({len(reasoning_structure)} 个阶段):")
+                for i, stage in enumerate(reasoning_structure, 1):
+                    module_name = stage.get("module", "未知模块")
+                    description = stage.get("description", "无描述")
+                    steps = stage.get("steps", [])
+
+                    print(f"\n  阶段 {i}: {module_name}")
+                    print(f"    作用: {description}")
+                    print(f"    步骤 ({len(steps)} 个):")
+                    for j, step in enumerate(steps, 1):
+                        print(f"      {j}. {step}")
+
+                return reasoning_structure
         except Exception as e:
-            print(f"Adapt 阶段解析失败: {e}")
-        
+            print(f"\n[Adapt] 解析失败: {e}")
+            print(f"[Adapt] 响应内容: {response[:500]}...")
+
         return []
 
-    def implement(self, task: str, reasoning_structure: List[Dict]) -> str:
-        """
-        Implement 阶段：使用适应后的推理结构解决问题
-        
-        输出：最终答案
-        """
+    def _extract_json(self, text: str) -> str:
+        json_match = re.search(r'\{[\s\S]*}', text)
+        if json_match:
+            return json_match.group(0)
+        return ""
+
+
+# =========================
+# Implement 组件
+# =========================
+class ImplementComponent:
+    def __init__(self, llm_client: QwenLLM):
+        self.llm = llm_client
+
+    def implement(self, task: str, reasoning_structure: List[Dict[str, any]]) -> str:
         context = {
             "task": task,
             "intermediate_results": []
         }
-        
+
+        print(f"\n[Implement] 开始执行推理结构...")
+        print(f"[Implement] 总共 {len(reasoning_structure)} 个阶段\n")
+
         for i, stage in enumerate(reasoning_structure, 1):
             module_name = stage.get("module", "")
             description = stage.get("description", "")
             steps = stage.get("steps", [])
-            
-            print(f"\n[阶段 {i}] {module_name}")
-            print(f"  描述: {description}")
-            print(f"  步骤: {', '.join(steps)}")
-            
+
+            print("=" * 70)
+            print(f"[阶段 {i}/{len(reasoning_structure)}] {module_name}")
+            print("=" * 70)
+            print(f"\n[模块作用]")
+            print(f"   {description}")
+
+            print(f"\n[推理步骤 ({len(steps)} 个)]:")
+            for j, step in enumerate(steps, 1):
+                print(f"   {j}. {step}")
+
+            print(f"\n[正在执行...]")
             result = self._execute_stage(task, module_name, description, steps, context)
-            print(f"  结果: {result[:200]}...")
-            
+
+            print(f"\n[执行完成]")
+            print(f"\n[推理结果]:")
+            print("-" * 70)
+            self._print_result(result)
+            print("-" * 70)
+
             context["intermediate_results"].append({
                 "stage": i,
                 "module": module_name,
                 "result": result
             })
-        
+
+        print(f"\n[Implement] 所有阶段执行完成，正在生成最终答案...")
         final_answer = self._generate_final_answer(task, context)
         return final_answer
 
+    def _print_result(self, result: str):
+        lines = result.split('\n')
+        if len(lines) > 15:
+            for i, line in enumerate(lines[:15], 1):
+                print(f"   {line}")
+            print(f"   ... (剩余 {len(lines) - 15} 行)")
+        else:
+            for line in lines:
+                print(f"   {line}")
+
     def _execute_stage(self, task: str, module_name: str, description: str, steps: List[str], context: Dict) -> str:
-        """执行单个推理阶段"""
         previous_results = "\n".join([
             f"阶段 {r['stage']} ({r['module']}): {r['result']}"
             for r in context["intermediate_results"]
         ])
-        
+
         prompt = f"""
             你是一个推理专家，正在执行 {module_name} 模块。
             
@@ -194,23 +261,22 @@ class SelfDiscoverAgent:
             模块描述：{description}
             
             推理步骤：
-            {chr(10).join([f'{i+1}. {step}' for i, step in enumerate(steps)])}
+            {chr(10).join([f'{i + 1}. {step}' for i, step in enumerate(steps)])}
             
             之前的推理结果：
             {previous_results if previous_results else "无"}
             
             请按照上述步骤进行推理，输出该阶段的推理结果。
         """
-        
+
         return self.llm.think([{"role": "user", "content": prompt}]).strip()
 
     def _generate_final_answer(self, task: str, context: Dict) -> str:
-        """生成最终答案"""
         reasoning_summary = "\n".join([
             f"阶段 {r['stage']} ({r['module']}):\n{r['result']}\n"
             for r in context["intermediate_results"]
         ])
-        
+
         prompt = f"""
             请基于以下推理过程，生成最终答案。
             
@@ -224,54 +290,54 @@ class SelfDiscoverAgent:
             2. 基于推理过程
             3. 逻辑清晰
         """
-        
+
         return self.llm.think([{"role": "user", "content": prompt}]).strip()
 
-    def _extract_json(self, text: str) -> str:
-        """从文本中提取 JSON"""
-        import re
-        json_match = re.search(r'\{[\s\S]*}', text)
-        if json_match:
-            return json_match.group(0)
-        return ""
+
+# =========================
+# SelfDiscover 组合 Agent
+# =========================
+class SelfDiscoverAgent:
+    def __init__(self, llm_client: QwenLLM):
+        self.select = SelectComponent(llm_client)
+        self.adapt = AdaptComponent(llm_client)
+        self.implement = ImplementComponent(llm_client)
 
     def run(self, task: str) -> str:
-        """运行完整的 Self-Discover 流程"""
         print("=" * 60)
         print("Self-Discover Agent")
         print("=" * 60)
         print(f"\n任务: {task}\n")
-        
+
         print("=" * 60)
         print("Stage 1: Select - 选择相关推理模块")
         print("=" * 60)
-        selected_modules = self.select(task)
+        selected_modules = self.select.select(task)
         print(f"选中的模块: {', '.join(selected_modules)}")
-        
+
         if not selected_modules:
             print("错误：未选中任何模块")
             return ""
-        
+
         print("\n" + "=" * 60)
         print("Stage 2: Adapt - 适应推理模块到具体任务")
         print("=" * 60)
-        reasoning_structure = self.adapt(task, selected_modules)
-        print(f"推理结构包含 {len(reasoning_structure)} 个阶段")
-        
+        reasoning_structure = self.adapt.adapt(task, selected_modules)
+
         if not reasoning_structure:
             print("错误：未生成推理结构")
             return ""
-        
+
         print("\n" + "=" * 60)
         print("Stage 3: Implement - 执行推理结构")
         print("=" * 60)
-        final_answer = self.implement(task, reasoning_structure)
-        
+        final_answer = self.implement.implement(task, reasoning_structure)
+
         print("\n" + "=" * 60)
         print("最终答案")
         print("=" * 60)
         print(final_answer)
-        
+
         return final_answer
 
 
@@ -279,15 +345,11 @@ class SelfDiscoverAgent:
 # 示例运行
 # =========================
 if __name__ == "__main__":
-    from dotenv import load_dotenv
-    import os
-
     load_dotenv()
     llm = QwenLLM(
         api_key=os.getenv("DASHSCOPE_API_KEY"),
-        base_url=os.getenv("DASHSCOPE_API_URL"),
-        model_name="qwen-plus"
+        base_url=os.getenv("DASHSCOPE_API_URL")
     )
 
     agent = SelfDiscoverAgent(llm)
-    agent.run("如何应对气候变化？")
+    agent.run("如何实现年化收益10%+？")

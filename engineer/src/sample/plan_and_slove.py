@@ -209,7 +209,7 @@ if __name__ == "__main__":
     if not api_key:
         raise ValueError("请在 .env 中配置 DASHSCOPE_API_KEY")
 
-    llm = QwenLLM(api_key=api_key, base_url=base_url, model_name="qwen-plus")
+    llm = QwenLLM(api_key=api_key, base_url=base_url)
 
     print("=" * 60)
     print("Plan-Solve Agent")

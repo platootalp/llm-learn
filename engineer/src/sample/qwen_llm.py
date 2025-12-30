@@ -12,7 +12,7 @@ class QwenLLM:
     使用 OpenAI 风格客户端封装，调用 dashscope API
     """
 
-    def __init__(self, api_key: str, base_url: str, model_name: str = "qwen-plus"):
+    def __init__(self, api_key: str, base_url: str, model_name: str = "qwen-plus-2025-12-01"):
         self.client = OpenAI(
             api_key=api_key,
             base_url=base_url,
