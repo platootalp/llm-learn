@@ -4,190 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="d34a1d7c-516f-42d9-a2bc-4378137796f6" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/../engineer/docs/hello-agents习题.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../engineer/src/pattern/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/.gitignore" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/.idea/.gitignore" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/.idea/blog.iml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/.idea/misc.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/.idea/modules.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/.idea/vcs.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/README.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/blog/2019-05-28-first-blog-post.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/blog/2019-05-29-long-blog-post.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/blog/2021-08-01-mdx-blog-post.mdx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/blog/2021-08-26-welcome/docusaurus-plushie-banner.jpeg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/blog/2021-08-26-welcome/index.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/blog/authors.yml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/blog/tags.yml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/AI/大模型/img/advance_rag.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/AI/大模型/img/rag_index.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/AI/大模型/template.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/intro.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/tutorial-basics/_category_.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/tutorial-basics/congratulations.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/tutorial-basics/create-a-blog-post.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/tutorial-basics/create-a-document.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/tutorial-basics/create-a-page.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/tutorial-basics/deploy-your-site.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/tutorial-basics/markdown-features.mdx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/tutorial-extras/_category_.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/tutorial-extras/img/docsVersionDropdown.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/tutorial-extras/img/localeDropdown.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/tutorial-extras/manage-docs-versions.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/tutorial-extras/translate-your-site.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/存储/SQL优化.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/学习路线/AI学习路径.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/学习路线/llm应用.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/学习路线/llm算法.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/学习路线/python.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/学习路线/进阶之路.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/开发框架/React/react.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/开发框架/Spring/Spring.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/技术文档/langgroup.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/技术文档/技术文档模板.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/系统设计/img/chat memory.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/系统设计/img/roadmap_engineer.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/系统设计/img/software-architecture-styles.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/系统设计/接口幂等.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/系统设计/相关图表.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/系统设计/设计模式/img/Employee.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/系统设计/设计模式/img/customer_address.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/系统设计/设计模式/img/customer_product.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/系统设计/设计模式/img/demo.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/系统设计/设计模式/img/image-20191229173422328.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/系统设计/设计模式/img/image-20191229173455149.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/系统设计/设计模式/img/image-20191229173518926.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/系统设计/设计模式/img/image-20191229173539838.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/系统设计/设计模式/img/image-20191229173554296.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/系统设计/设计模式/img/image-20200207194617620.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/系统设计/设计模式/img/image-20200207234545691.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/系统设计/设计模式/img/image-20200208180417291.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/系统设计/设计模式/img/image-20200208182322313.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/系统设计/设计模式/img/image-20200208212930857.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/系统设计/设计模式/img/image-20200210143039168.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/系统设计/设计模式/img/image-20200210144457478.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/系统设计/设计模式/img/image-20200211130313251.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/系统设计/设计模式/img/image-20200214110924010.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/系统设计/设计模式/img/image-20200214215446638.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/系统设计/设计模式/img/image-20200215220322641.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/系统设计/设计模式/img/image-20200215225227616.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/系统设计/设计模式/img/image-20200401214509176.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/系统设计/设计模式/img/image-20200401222951963.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/系统设计/设计模式/img/image-20200413225341516.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/系统设计/设计模式/img/image-20200426233931693.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/系统设计/设计模式/img/image-20200429111324770.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/系统设计/设计模式/img/image-20200429165544151.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/系统设计/设计模式/img/image-20200429185050396.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/系统设计/设计模式/img/image-20200429204239868.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/系统设计/设计模式/img/image-20200429204700956.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/系统设计/设计模式/img/image-20200429211132185.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/系统设计/设计模式/img/image-20200430220155371.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/系统设计/设计模式/img/jdk源码解析.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/系统设计/设计模式/img/node.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/系统设计/设计模式/img/open-close.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/系统设计/设计模式/img/中介者模式.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/系统设计/设计模式/img/享元模式.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/系统设计/设计模式/img/依赖倒转原则.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/系统设计/设计模式/img/依赖倒转原则改进.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/系统设计/设计模式/img/俄罗斯方块.jpeg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/系统设计/设计模式/img/原型模式.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/系统设计/设计模式/img/原型模式1.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/系统设计/设计模式/img/原型模式2.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/系统设计/设计模式/img/原型模式3.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/系统设计/设计模式/img/合成复用原则.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/系统设计/设计模式/img/合成复用原则1.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/系统设计/设计模式/img/命令模式.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/系统设计/设计模式/img/外观模式-jdk源码解析.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/系统设计/设计模式/img/外观模式.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/系统设计/设计模式/img/外观模式引入.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/系统设计/设计模式/img/对象适配器模式.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/系统设计/设计模式/img/工厂方法模式.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/系统设计/设计模式/img/工厂设计模式引入.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/系统设计/设计模式/img/建造者模式.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/系统设计/设计模式/img/建造者模式1.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/系统设计/设计模式/img/抽象工厂模式.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/系统设计/设计模式/img/接口隔离原则.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/系统设计/设计模式/img/接口隔离原则1.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/系统设计/设计模式/img/桥接模式.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/系统设计/设计模式/img/模板方法模式.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/系统设计/设计模式/img/正方形不是长方形.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/系统设计/设计模式/img/正方形不是长方形改进.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/系统设计/设计模式/img/状态模式.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/系统设计/设计模式/img/状态模式前.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/系统设计/设计模式/img/白箱备忘录模式.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/系统设计/设计模式/img/策略模式.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/系统设计/设计模式/img/简单工厂模式.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/系统设计/设计模式/img/组合模式-安全性.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/系统设计/设计模式/img/组合模式.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/系统设计/设计模式/img/装饰者模式-jdk源码.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/系统设计/设计模式/img/装饰者模式-使用前.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/系统设计/设计模式/img/装饰者模式.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/系统设计/设计模式/img/观察者模式.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/系统设计/设计模式/img/解释器模式.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/系统设计/设计模式/img/访问者模式.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/系统设计/设计模式/img/责任链模式.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/系统设计/设计模式/img/转接头.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/系统设计/设计模式/img/迪米特法则.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/系统设计/设计模式/img/迭代器模式.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/系统设计/设计模式/img/适配器模式-jdk源码解析.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/系统设计/设计模式/img/适配器模式.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/系统设计/设计模式/img/静态代理.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/系统设计/设计模式/img/黑箱备忘录模式.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/系统设计/设计模式/画图/中介者模式理解.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/系统设计/设计模式/画图/依赖倒转原则理解.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/系统设计/设计模式/画图/接口该类原则理解.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/系统设计/设计模式/类图/springIOC.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/系统设计/设计模式/设计模式-day01.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/系统设计/设计模式/设计模式-day02.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/系统设计/设计模式/设计模式-day03.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/系统设计/设计模式/设计模式-day04.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/系统设计/设计模式/设计模式-day05.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/系统设计/设计模式/设计模式-day06.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/系统设计/设计流程.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/系统设计/读写分离&amp;分库分表.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/系统设计/软件架构模式.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/系统设计/高并发.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/编程语言/Python/包管理工具.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docs/计算机基础/leetcode.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/docusaurus.config.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/package-lock.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/package.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/sidebars.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/src/components/HomepageFeatures/index.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/src/components/HomepageFeatures/styles.module.css" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/src/css/custom.css" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/src/pages/index.module.css" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/src/pages/index.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/src/pages/markdown-page.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/static/.nojekyll" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/static/img/docusaurus-social-card.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/static/img/docusaurus.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/static/img/favicon.ico" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/static/img/logo.svg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/static/img/undraw_docusaurus_mountain.svg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/static/img/undraw_docusaurus_react.svg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/static/img/undraw_docusaurus_tree.svg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../blog/tsconfig.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../engineer/docs/Agent设计与实践.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../engineer/docs/agentic设计模式.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../engineer/docs/temp.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../engineer/src/engineer.egg-info/PKG-INFO" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../engineer/src/engineer.egg-info/SOURCES.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../engineer/src/engineer.egg-info/dependency_links.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../engineer/src/engineer.egg-info/requires.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../engineer/src/engineer.egg-info/top_level.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../engineer/src/sample/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/../engineer/docs/A2A协议.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../engineer/src/sample/llm_compiler.py" beforeDir="false" afterPath="$PROJECT_DIR$/../engineer/src/pattern/llm_compiler.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../engineer/src/sample/plan_and_slove.py" beforeDir="false" afterPath="$PROJECT_DIR$/../engineer/src/pattern/plan_and_slove.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../engineer/src/sample/qwen_llm.py" beforeDir="false" afterPath="$PROJECT_DIR$/../engineer/src/pattern/qwen_llm.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../engineer/src/sample/react.py" beforeDir="false" afterPath="$PROJECT_DIR$/../engineer/src/pattern/react.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../engineer/src/sample/reflection.py" beforeDir="false" afterPath="$PROJECT_DIR$/../engineer/src/pattern/reflection.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../engineer/src/sample/rewoo.py" beforeDir="false" afterPath="$PROJECT_DIR$/../engineer/src/pattern/rewoo.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../engineer/src/sample/self-discover.py" beforeDir="false" afterPath="$PROJECT_DIR$/../engineer/src/pattern/self-discover.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../engineer/src/sample/tools.py" beforeDir="false" afterPath="$PROJECT_DIR$/../engineer/src/pattern/tools.py" afterDir="false" />
-    </list>
+    <list default="true" id="d34a1d7c-516f-42d9-a2bc-4378137796f6" name="Changes" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -214,34 +31,35 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;Python tests.Doctests in TravelAssistantAgent.executor&quot;: &quot;Run&quot;,
-    &quot;Python tests.Doctests in agent.executor&quot;: &quot;Run&quot;,
-    &quot;Python tests.Python tests for test_api.TestAPI.executor&quot;: &quot;Run&quot;,
-    &quot;Python.agent.executor&quot;: &quot;Run&quot;,
-    &quot;Python.basic_reflection.executor&quot;: &quot;Run&quot;,
-    &quot;Python.llm_compiler.executor&quot;: &quot;Run&quot;,
-    &quot;Python.llm_factory.executor&quot;: &quot;Run&quot;,
-    &quot;Python.plan_and_slove.executor&quot;: &quot;Run&quot;,
-    &quot;Python.plan_slove_sample.executor&quot;: &quot;Run&quot;,
-    &quot;Python.react.executor&quot;: &quot;Run&quot;,
-    &quot;Python.react_sample.executor&quot;: &quot;Run&quot;,
-    &quot;Python.reason_without_observation.executor&quot;: &quot;Run&quot;,
-    &quot;Python.reflection.executor&quot;: &quot;Run&quot;,
-    &quot;Python.reflexion.executor&quot;: &quot;Run&quot;,
-    &quot;Python.rewoo.executor&quot;: &quot;Run&quot;,
-    &quot;Python.self-discover.executor&quot;: &quot;Run&quot;,
-    &quot;Python.self-discovery.executor&quot;: &quot;Run&quot;,
-    &quot;Python.tool_executor.executor&quot;: &quot;Run&quot;,
-    &quot;Python.tools.executor&quot;: &quot;Debug&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
-    &quot;last_opened_file_path&quot;: &quot;/Users/lijunyi/road/llm-learn/demo&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;com.intellij.pycharm.community.ide.impl.configuration.PythonContentEntriesConfigurable&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Python tests.Doctests in TravelAssistantAgent.executor": "Run",
+    "Python tests.Doctests in agent.executor": "Run",
+    "Python tests.Python tests for test_api.TestAPI.executor": "Run",
+    "Python.agent.executor": "Run",
+    "Python.basic_reflection.executor": "Run",
+    "Python.llm_compiler.executor": "Run",
+    "Python.llm_factory.executor": "Run",
+    "Python.llm_integration_example.executor": "Debug",
+    "Python.plan_and_slove.executor": "Run",
+    "Python.plan_slove_sample.executor": "Run",
+    "Python.react.executor": "Run",
+    "Python.react_sample.executor": "Run",
+    "Python.reason_without_observation.executor": "Run",
+    "Python.reflection.executor": "Run",
+    "Python.reflexion.executor": "Run",
+    "Python.rewoo.executor": "Run",
+    "Python.self-discover.executor": "Run",
+    "Python.self-discovery.executor": "Run",
+    "Python.tool_executor.executor": "Run",
+    "Python.tools.executor": "Debug",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "git-widget-placeholder": "main",
+    "last_opened_file_path": "/Users/lijunyi/road/llm-learn/demo",
+    "settings.editor.selected.configurable": "com.intellij.pycharm.community.ide.impl.configuration.PythonContentEntriesConfigurable"
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$" />
@@ -254,7 +72,7 @@
       <recent name="$PROJECT_DIR$/../engineer/tests" />
     </key>
   </component>
-  <component name="RunManager" selected="Python.main">
+  <component name="RunManager" selected="Python.llm_integration_example">
     <configuration name="llm_compiler" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="engineer" />
       <option name="ENV_FILES" value="" />
@@ -269,6 +87,28 @@
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/../engineer/src/sample/llm_compiler.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="llm_integration_example" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="engineer" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/../engineer/src/sample" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/../engineer/src/sample/llm_integration_example.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -365,35 +205,13 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="tools" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
-      <module name="engineer" />
-      <option name="ENV_FILES" value="" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/../engineer/src/sample" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/../engineer/src/sample/tools.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <option name="MODULE_MODE" value="false" />
-      <option name="REDIRECT_INPUT" value="false" />
-      <option name="INPUT_FILE" value="" />
-      <method v="2" />
-    </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Python.llm_integration_example" />
         <item itemvalue="Python.self-discover" />
         <item itemvalue="Python.rewoo" />
         <item itemvalue="Python.llm_compiler" />
         <item itemvalue="Python.react" />
-        <item itemvalue="Python.tools" />
       </list>
     </recent_temporary>
   </component>
@@ -421,6 +239,16 @@
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/../engineer/agent/sql_agent.py</url>
           <option name="timeStamp" value="1" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/../engineer/src/core/model_detector.py</url>
+          <line>285</line>
+          <option name="timeStamp" value="9" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/../engineer/src/core/llm_manager.py</url>
+          <line>54</line>
+          <option name="timeStamp" value="10" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
