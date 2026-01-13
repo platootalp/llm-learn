@@ -8,7 +8,7 @@ import os
 import re
 from typing import Dict, Callable, List, Optional, Tuple
 from dotenv import load_dotenv
-from qwen_llm import QwenLLM
+from core import QwenLLM
 from pattern.tools import ToolExecutor
 
 

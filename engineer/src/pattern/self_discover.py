@@ -13,7 +13,7 @@ from typing import List, Dict, Any
 
 from dotenv import load_dotenv
 
-from qwen_llm import QwenLLM
+from core import QwenLLM
 
 # =========================
 # 原子推理模块库（40+ 个模块）

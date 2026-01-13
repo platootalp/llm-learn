@@ -1,6 +1,6 @@
 """
 LLM集成模块
-提供统一的LLM调用接口，支持多供应商模型集成和本地模型部署
+提供统一的LLM调用接口，支持多供应商LLM集成和本地LLM部署
 """
 
 from .base_llm import (
@@ -12,27 +12,27 @@ from .base_llm import (
     ModelType
 )
 
-from .llm_providers import (
+from .providers import (
     OpenAILLM,
     AnthropicLLM,
     QwenLLM,
     HuggingFaceLLM,
-    OllamaLLM,
-    create_llm
+    OllamaLLM
 )
 
-from .model_detector import (
-    ModelDetector,
-    DetectedModel,
-    auto_detect_models,
-    get_best_available_model
-)
-
-from .llm_manager import (
-    LLMManager,
-    create_llm_manager,
+from .llm_factory import (
+    create_llm,
+    infer_model_type,
+    create_model,
     quick_chat,
     quick_chat_stream
+)
+
+from .model_info import (
+    ModelInfoProvider,
+    ModelInfo,
+    list_models,
+    print_models
 )
 
 __all__ = [
@@ -48,14 +48,14 @@ __all__ = [
     "HuggingFaceLLM",
     "OllamaLLM",
     "create_llm",
-    "ModelDetector",
-    "DetectedModel",
-    "auto_detect_models",
-    "get_best_available_model",
-    "LLMManager",
-    "create_llm_manager",
+    "infer_model_type",
+    "create_model",
     "quick_chat",
-    "quick_chat_stream"
+    "quick_chat_stream",
+    "ModelInfoProvider",
+    "ModelInfo",
+    "list_models",
+    "print_models"
 ]
 
 __version__ = "1.0.0"

@@ -7,11 +7,14 @@ import sys
 import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
+from dotenv import load_dotenv
+load_dotenv()
+
 from core import (
     ModelConfig, Message, ModelType,
     OpenAILLM, AnthropicLLM, QwenLLM, HuggingFaceLLM, OllamaLLM,
-    LLMManager, create_llm_manager, quick_chat, quick_chat_stream,
-    ModelDetector, DetectedModel
+    create_model, infer_model_type, quick_chat, quick_chat_stream,
+    ModelInfoProvider, ModelInfo, list_models, print_models
 )
 
 
@@ -22,7 +25,7 @@ def example_1_quick_chat():
     print("=" * 70)
     
     try:
-        response = quick_chat("你好，请介绍一下自己")
+        response = quick_chat("你好，请介绍一下自己", model_name="qwen-plus")
         print(f"响应: {response.content}")
         print(f"延迟: {response.latency:.2f}秒")
         print(f"Token使用: {response.usage}")
@@ -38,12 +41,9 @@ def example_2_create_specific_model():
     print("示例2: 创建特定类型的模型")
     print("=" * 70)
     
-    manager = create_llm_manager()
-    
     try:
         print("创建OpenAI模型...")
-        openai_model = manager.create_model(
-            model_type=ModelType.OPENAI,
+        openai_model = create_model(
             model_name="gpt-3.5-turbo"
         )
         print(f"OpenAI模型创建成功: {openai_model.config.model_name}")
@@ -52,8 +52,7 @@ def example_2_create_specific_model():
     
     try:
         print("\n创建通义千问模型...")
-        qwen_model = manager.create_model(
-            model_type=ModelType.QWEN,
+        qwen_model = create_model(
             model_name="qwen-plus"
         )
         print(f"通义千问模型创建成功: {qwen_model.config.model_name}")
@@ -69,9 +68,9 @@ def example_3_chat_with_messages():
     print("示例3: 使用消息列表进行多轮对话")
     print("=" * 70)
     
-    manager = create_llm_manager()
-    
     try:
+        model = create_model(model_name="qwen-plus")
+        
         messages = [
             Message(role="system", content="你是一个有帮助的AI助手"),
             Message(role="user", content="什么是Python？"),
@@ -79,7 +78,7 @@ def example_3_chat_with_messages():
             Message(role="user", content="它有哪些特点？")
         ]
         
-        response = manager.chat(messages)
+        response = model.chat(messages)
         print(f"响应: {response.content}")
         print(f"延迟: {response.latency:.2f}秒")
     except Exception as e:
@@ -96,7 +95,7 @@ def example_4_stream_chat():
     
     try:
         print("流式响应: ", end="", flush=True)
-        for chunk in quick_chat_stream("请用三句话介绍一下人工智能"):
+        for chunk in quick_chat_stream("请用三句话介绍一下人工智能", model_name="qwen-plus"):
             print(chunk, end="", flush=True)
         print("\n")
     except Exception as e:
@@ -106,44 +105,49 @@ def example_4_stream_chat():
 
 
 def example_5_model_detection():
-    """示例5: 模型检测"""
+    """示例5: 查看可用模型"""
     print("=" * 70)
-    print("示例5: 模型检测")
+    print("示例5: 查看可用模型")
     print("=" * 70)
     
-    detector = ModelDetector()
+    print("列出所有可用模型...")
+    all_models = list_models()
     
-    print("检测所有可用模型...")
-    models = detector.get_available_models()
+    total = 0
+    for provider, models in all_models.items():
+        if models:
+            print(f"\n{provider.upper()} ({len(models)} 个模型):")
+            for i, model in enumerate(models[:5], 1):
+                print(f"  {i}. {model.model_name}")
+            if len(models) > 5:
+                print(f"  ... 还有 {len(models) - 5} 个模型")
+            total += len(models)
     
-    if models:
-        print(f"检测到 {len(models)} 个可用模型:")
-        for model in models:
-            print(f"  - {model.model_type.value}: {model.model_name}")
-            print(f"    可用: {model.available}")
-            if model.available:
-                print(f"    配置: {model.config}")
-    else:
+    if total == 0:
         print("未检测到可用模型")
+        print("\n提示：")
+        print("- 配置API密钥：设置 OPENAI_API_KEY, ANTHROPIC_API_KEY, DASHSCOPE_API_KEY")
+        print("- 启动Ollama：运行 'ollama serve'")
+        print("- 下载Hugging Face模型：使用 transformers 库下载")
+    else:
+        print(f"\n总计: {total} 个可用模型")
     
     print()
 
 
 def example_6_auto_create_model():
-    """示例6: 自动创建最佳可用模型"""
+    """示例6: 显式创建指定模型"""
     print("=" * 70)
-    print("示例6: 自动创建最佳可用模型")
+    print("示例6: 显式创建指定模型")
     print("=" * 70)
     
-    manager = create_llm_manager()
-    
-    print("自动检测并创建最佳模型...")
+    print("创建指定的模型...")
     try:
-        model = manager.create_model(auto_detect=True)
-        print(f"自动创建的模型: {model.config.model_name}")
+        model = create_model(model_name="qwen-plus")
+        print(f"创建的模型: {model.config.model_name}")
         print(f"模型类型: {model.config.model_type.value}")
         
-        response = manager.complete("你好")
+        response = model.complete("你好")
         print(f"测试响应: {response.content[:50]}...")
     except Exception as e:
         print(f"错误: {e}")
@@ -157,16 +161,14 @@ def example_7_model_metrics():
     print("示例7: 查看模型性能指标")
     print("=" * 70)
     
-    manager = create_llm_manager()
-    
     try:
-        model = manager.create_model(auto_detect=True)
+        model = create_model(model_name="qwen-plus")
         
         print("进行多次调用以收集指标...")
         for i in range(3):
-            manager.complete(f"测试消息 {i+1}")
+            model.complete(f"测试消息 {i+1}")
         
-        metrics = manager.get_model_metrics()
+        metrics = model.metrics
         print(f"模型名称: {metrics.model_name}")
         print(f"平均延迟: {metrics.avg_latency:.2f}秒")
         print(f"平均速度: {metrics.avg_tokens_per_second:.2f} tokens/秒")
@@ -185,19 +187,14 @@ def example_8_custom_config():
     print("示例8: 使用自定义配置创建模型")
     print("=" * 70)
     
-    config = ModelConfig(
-        model_name="qwen-plus",
-        model_type=ModelType.QWEN,
-        api_key=os.getenv("DASHSCOPE_API_KEY"),
-        temperature=0.7,
-        max_tokens=500,
-        top_p=0.9,
-        timeout=30
-    )
-    
     try:
-        from core import create_llm
-        model = create_llm(config)
+        model = create_model(
+            model_name="qwen-plus",
+            temperature=0.7,
+            max_tokens=500,
+            top_p=0.9,
+            timeout=30
+        )
         print(f"模型创建成功: {model.config.model_name}")
         print(f"温度: {model.config.temperature}")
         print(f"最大tokens: {model.config.max_tokens}")
@@ -216,12 +213,9 @@ def example_9_local_models():
     print("示例9: 使用本地模型")
     print("=" * 70)
     
-    manager = create_llm_manager()
-    
     try:
         print("尝试创建Hugging Face本地模型...")
-        hf_model = manager.create_model(
-            model_type=ModelType.HUGGINGFACE,
+        hf_model = create_model(
             model_name="gpt2"
         )
         print(f"Hugging Face模型创建成功: {hf_model.config.model_name}")
@@ -233,8 +227,7 @@ def example_9_local_models():
     
     try:
         print("\n尝试创建Ollama本地模型...")
-        ollama_model = manager.create_model(
-            model_type=ModelType.OLLAMA,
+        ollama_model = create_model(
             model_name="llama2"
         )
         print(f"Ollama模型创建成功: {ollama_model.config.model_name}")
@@ -247,37 +240,25 @@ def example_9_local_models():
     print()
 
 
-def example_10_model_management():
-    """示例10: 模型管理（列出、切换、删除）"""
+def example_10_infer_model_type():
+    """示例10: 模型类型推断"""
     print("=" * 70)
-    print("示例10: 模型管理")
+    print("示例10: 模型类型推断")
     print("=" * 70)
     
-    manager = create_llm_manager()
+    test_models = [
+        "gpt-4",
+        "gpt-3.5-turbo",
+        "claude-3-opus",
+        "qwen-plus",
+        "qwen-turbo",
+        "llama2",
+        "mistralai/Mistral-7B-Instruct-v0.2"
+    ]
     
-    try:
-        print("创建多个模型...")
-        model1 = manager.create_model(
-            model_type=ModelType.QWEN,
-            model_name="qwen-plus"
-        )
-        model2 = manager.create_model(
-            model_type=ModelType.QWEN,
-            model_name="qwen-turbo"
-        )
-        
-        print(f"\n已加载的模型: {manager.list_models()}")
-        
-        print("\n切换当前模型...")
-        manager.set_current_model(model1)
-        print(f"当前模型: {manager.get_current_model().config.model_name}")
-        
-        print("\n删除模型...")
-        manager.remove_model("qwen:qwen-turbo")
-        print(f"删除后的模型列表: {manager.list_models()}")
-        
-    except Exception as e:
-        print(f"错误: {e}")
+    for model_name in test_models:
+        model_type = infer_model_type(model_name)
+        print(f"{model_name:50} -> {model_type.value}")
     
     print()
 
@@ -298,9 +279,9 @@ def main():
         example_6_auto_create_model,
         example_7_model_metrics,
         example_8_custom_config,
+        example_10_infer_model_type,
         # example_2_create_specific_model,
         # example_9_local_models,
-        # example_10_model_management,
     ]
     
     for example in examples:

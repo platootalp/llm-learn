@@ -12,7 +12,7 @@ import json
 from dotenv import load_dotenv
 from typing import Dict, List, Set, Any, Optional, Tuple
 from dataclasses import dataclass, field
-from qwen_llm import QwenLLM
+from core import QwenLLM
 from pattern.tools import ToolExecutor
 
 

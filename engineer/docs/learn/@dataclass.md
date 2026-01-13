@@ -1,4 +1,5 @@
-`@dataclass` 是 Python 3.7+ 引入的一个装饰器（来自 `dataclasses` 模块），用于自动生成常见的类方法（如 `__init__`、`__repr__`、`__eq__` 等），从而减少样板代码，让数据类的定义更简洁清晰。
+`@dataclass` 是 Python 3.7+ 引入的一个装饰器（来自 `dataclasses` 模块），用于自动生成常见的类方法（如 `__init__`、`__repr__`、
+`__eq__` 等），从而减少样板代码，让数据类的定义更简洁清晰。
 
 ---
 
@@ -6,6 +7,7 @@
 
 ```python
 from dataclasses import dataclass
+
 
 @dataclass
 class Person:
@@ -36,15 +38,15 @@ class Person:
 
 ### 常用参数（`@dataclass(...)` 的选项）
 
-| 参数 | 说明 |
-|------|------|
-| `init=True` | 是否生成 `__init__` 方法（默认是） |
-| `repr=True` | 是否生成 `__repr__` 方法（默认是） |
-| `eq=True` | 是否生成 `__eq__` 方法（默认是） |
-| `order=False` | 是否生成 `<`, `<=`, `>`, `>=` 方法（需 `eq=True`） |
-| `unsafe_hash=False` | 控制是否生成 `__hash__` 方法 |
-| `frozen=False` | 若为 `True`，则实例不可变（类似 `namedtuple`） |
-| `slots=False` | （Python 3.10+）是否使用 `__slots__` 减少内存占用 |
+| 参数                  | 说明                                        |
+|---------------------|-------------------------------------------|
+| `init=True`         | 是否生成 `__init__` 方法（默认是）                   |
+| `repr=True`         | 是否生成 `__repr__` 方法（默认是）                   |
+| `eq=True`           | 是否生成 `__eq__` 方法（默认是）                     |
+| `order=False`       | 是否生成 `<`, `<=`, `>`, `>=` 方法（需 `eq=True`） |
+| `unsafe_hash=False` | 控制是否生成 `__hash__` 方法                      |
+| `frozen=False`      | 若为 `True`，则实例不可变（类似 `namedtuple`）         |
+| `slots=False`       | （Python 3.10+）是否使用 `__slots__` 减少内存占用     |
 
 示例：不可变数据类
 
@@ -67,6 +69,7 @@ class Point:
 from dataclasses import dataclass, field
 from typing import List
 
+
 @dataclass
 class Student:
     name: str
@@ -75,6 +78,7 @@ class Student:
 ```
 
 常用 `field` 参数：
+
 - `default`：默认值（不可变对象）
 - `default_factory`：可调用对象，用于生成默认值（如 `list`, `dict`）
 - `init=False`：该字段不参与构造
@@ -91,6 +95,7 @@ class Student:
 @dataclass
 class Animal:
     species: str
+
 
 @dataclass
 class Dog(Animal):
@@ -125,6 +130,4 @@ class Circle:
             raise ValueError("Radius must be non-negative")
 ```
 
----
 
-如果你有具体使用场景（比如结合 FastAPI、序列化、嵌套结构等），可以进一步说明，我可以给出针对性示例。

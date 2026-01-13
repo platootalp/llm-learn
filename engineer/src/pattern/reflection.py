@@ -7,7 +7,7 @@ Reflection Agent 示例实现（职责分离版 + 提示词适配）
 
 import os
 from dotenv import load_dotenv
-from qwen_llm import QwenLLM
+from core import QwenLLM
 
 INITIAL_PROMPT = """
 你是一位资深的Python程序员。请根据以下要求，编写一个Python函数。
