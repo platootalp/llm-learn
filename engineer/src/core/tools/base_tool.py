@@ -227,7 +227,7 @@ class BaseTool(ABC):
         try:
             # 触发开始回调
             self._trigger_callback(ToolCallbackType.ON_TOOL_START, kwargs)
-            
+
             # 验证参数
             if self.args_schema:
                 validated_kwargs = self.validate_args(**kwargs)

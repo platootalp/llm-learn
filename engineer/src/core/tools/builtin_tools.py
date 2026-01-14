@@ -364,7 +364,7 @@ def list_builtin_tools() -> str:
         "文本处理": ["text_length", "text_replace"],
         "JSON工具": ["json_parse", "json_extract"],
     }
-    
+
     for category, tool_names in categories.items():
         result += f"\n📦 {category}:\n"
         for tool in tools:

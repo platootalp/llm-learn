@@ -8,7 +8,9 @@ import requests
 from typing import List, Dict, Any, Optional
 from dataclasses import dataclass
 
-from .base_llm import ModelConfig, ModelType
+# genAI_main_start
+from .language_models import ChatModelConfig, ModelType
+# genAI_main_end
 
 
 @dataclass

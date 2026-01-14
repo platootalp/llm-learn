@@ -16,13 +16,17 @@ try:
 except ImportError:
     TRANSFORMERS_AVAILABLE = False
 
-from ..base_llm import (
-    BaseLLM, ModelConfig, Message, ModelResponse,
-    BaseMessage
+# genAI_main_start */
+from ..language_models import (
+    BaseChatModel, ChatModelConfig, BaseMessage,
+    HumanMessage, AIMessage, ChatResult
 )
+from typing import Iterator, Optional, Any
+# genAI_main_end */
 
 
-class HuggingFaceLLM(BaseLLM):
+# genAI_main_start */
+class HuggingFaceLLM(BaseChatModel):
     """Hugging Face本地LLM提供商
     
     支持在本地部署和运行Hugging Face Transformers库中的开源LLM
@@ -36,7 +40,7 @@ class HuggingFaceLLM(BaseLLM):
         config: LLM配置对象
     """
 
-    def __init__(self, config: ModelConfig):
+    def __init__(self, config: ChatModelConfig):
         """初始化Hugging Face LLM实例
         
         自动检测可用设备（优先使用GPU），加载LLM和分词器
@@ -82,24 +86,31 @@ class HuggingFaceLLM(BaseLLM):
             self.model = self.model.to(self.device)
 
         print(f"[HuggingFace] LLM加载完成")
+# genAI_main_end */
 
-    def chat(self, messages: List[Union[Message, BaseMessage]], **kwargs) -> ModelResponse:
-        """调用Hugging Face LLM进行对话
+    # genAI_main_start */
+    def _generate(
+        self,
+        messages: List[BaseMessage],
+        stop: Optional[List[str]] = None,
+        **kwargs: Any
+    ) -> ChatResult:
+        """生成响应（内部方法）
         
         将消息格式化为提示词，使用LLM生成响应
         支持温度、top_p、top_k等生成参数
         
         Args:
             messages: 消息列表
+            stop: 停止词列表
             **kwargs: 额外参数，如max_tokens、temperature、top_p、top_k等
         
         Returns:
-            ModelResponse对象，包含响应内容和使用信息
+            ChatResult对象，包含响应内容和使用信息
         
         Raises:
             RuntimeError: LLM调用失败
         """
-        start_time = time.time()
         try:
             prompt = self._format_messages(messages)
 
@@ -119,7 +130,6 @@ class HuggingFaceLLM(BaseLLM):
                     top_k=kwargs.get("top_k", self.config.top_k) or 50,
                     do_sample=True,
                     pad_token_id=self.tokenizer.eos_token_id,
-                    **self.config.additional_params,
                     **kwargs
                 )
 
@@ -128,47 +138,38 @@ class HuggingFaceLLM(BaseLLM):
                 skip_special_tokens=True
             )
 
-            latency = time.time() - start_time
             tokens = outputs.shape[1]
 
-            self.update_metrics(latency, tokens, True)
-
-            return ModelResponse(
-                content=response_text.strip(),
-                model=self.config.model_name,
-                usage={
-                    "prompt_tokens": inputs['input_ids'].shape[1],
-                    "completion_tokens": outputs.shape[1] - inputs['input_ids'].shape[1],
-                    "total_tokens": tokens
-                },
-                finish_reason="length",
-                latency=latency
+            return ChatResult(
+                message=AIMessage(content=response_text.strip()),
+                generation_info={
+                    "model": self.config.model_name,
+                    "usage": {
+                        "prompt_tokens": inputs['input_ids'].shape[1],
+                        "completion_tokens": outputs.shape[1] - inputs['input_ids'].shape[1],
+                        "total_tokens": tokens
+                    },
+                    "finish_reason": "length"
+                }
             )
         except Exception as e:
-            latency = time.time() - start_time
-            self.update_metrics(latency, 0, False)
             raise RuntimeError(f"Hugging Face LLM调用失败: {str(e)}")
+    # genAI_main_end */
 
-    def complete(self, prompt: str, **kwargs) -> ModelResponse:
-        """文本补全接口
-        
-        Args:
-            prompt: 提示文本
-            **kwargs: 额外参数
-        
-        Returns:
-            ModelResponse对象，包含响应内容和使用信息
-        """
-        messages = [Message(role="user", content=prompt)]
-        return self.chat(messages, **kwargs)
-
-    def stream_chat(self, messages: List[Union[Message, BaseMessage]], **kwargs) -> Generator[str, None, None]:
-        """流式聊天接口
+    # genAI_main_start */
+    def _stream(
+        self,
+        messages: List[BaseMessage],
+        stop: Optional[List[str]] = None,
+        **kwargs: Any
+    ) -> Iterator[str]:
+        """流式生成响应（内部方法）
         
         生成完整响应后逐字符返回（模拟流式输出）
         
         Args:
             messages: 消息列表
+            stop: 停止词列表
             **kwargs: 额外参数
         
         Yields:
@@ -192,7 +193,6 @@ class HuggingFaceLLM(BaseLLM):
                 top_k=kwargs.get("top_k", self.config.top_k) or 50,
                 do_sample=True,
                 pad_token_id=self.tokenizer.eos_token_id,
-                **self.config.additional_params,
                 **kwargs
             )
 
@@ -203,8 +203,10 @@ class HuggingFaceLLM(BaseLLM):
 
         for char in full_text:
             yield char
+    # genAI_main_end */
 
-    def _format_messages(self, messages: List[Union[Message, BaseMessage]]) -> str:
+    # genAI_main_start */
+    def _format_messages(self, messages: List[BaseMessage]) -> str:
         """格式化消息为提示词
         
         优先使用分词器的chat_template（如果可用）
@@ -234,13 +236,14 @@ class HuggingFaceLLM(BaseLLM):
             formatted.append("Assistant:")
             return "\n".join(formatted)
 
-    def _convert_messages_to_dict(self, messages: List[Union[Message, BaseMessage]]) -> List[dict]:
+    def _convert_messages_to_dict(self, messages: List[BaseMessage]) -> List[dict]:
         """将消息列表转换为字典格式
         
         Args:
-            messages: 消息列表，支持Message或BaseMessage类型
+            messages: 消息列表
         
         Returns:
             包含role和content的字典列表
         """
-        return [m.to_dict() if hasattr(m, 'to_dict') else {"role": m.role, "content": m.content} for m in messages]
+        return [m.to_dict() for m in messages]
+    # genAI_main_end */

@@ -33,6 +33,21 @@ docs/project/
 
 **快速开始**: [tools/QUICK_START.md](./tools/QUICK_START.md)
 
+#### 2. LLM 核心模块 (LLM Core) ✨ 新增
+
+**位置**: `llm/`
+
+**文档列表**:
+- [INDEX.md](./llm/INDEX.md) - 文档索引和导航
+- [QUICK_START.md](./llm/QUICK_START.md) - 快速上手指南
+- [REFACTORING.md](./llm/REFACTORING.md) - 重构文档和迁移指南
+
+**简介**: 
+LLM 基础能力模块，已重构以对齐 LangChain 的命名规范和架构设计。提供统一的聊天模型接口，支持 OpenAI、Anthropic、通义千问、Ollama 等多个提供商。新增异步支持、批量处理等高级功能。
+
+**快速开始**: [llm/QUICK_START.md](./llm/QUICK_START.md)
+**迁移指南**: [llm/REFACTORING.md](./llm/REFACTORING.md)
+
 ---
 
 ### 🎯 使用指南
@@ -60,17 +75,23 @@ docs/project/
 ### 📊 项目统计
 
 #### 整体统计
-- **模块数**: 1个（工具系统）
-- **核心文件**: 6个
-- **代码行数**: ~2000行
-- **文档字数**: ~24000字
-- **示例代码**: 100+个
+- **模块数**: 2个（工具系统、LLM核心）
+- **核心文件**: 8个
+- **代码行数**: ~3000行
+- **文档字数**: ~40000字
+- **示例代码**: 150+个
 
 #### 工具系统统计
 - **核心类**: 10+个
 - **内置工具**: 11个
 - **装饰器**: 3个
 - **单元测试**: 30+个
+
+#### LLM核心模块统计
+- **核心类**: 15+个
+- **支持提供商**: 5个
+- **新增方法**: 6个（异步+批量）
+- **向后兼容**: 100%
 
 ---
 
@@ -81,10 +102,16 @@ docs/project/
 - [完整文档](./tools/README.md)
 - [实现报告](./tools/IMPLEMENTATION.md)
 
+#### LLM 核心模块 ✨
+- [快速开始](./llm/QUICK_START.md)
+- [重构文档](./llm/REFACTORING.md)
+- [文档索引](./llm/INDEX.md)
+
 #### 代码位置
 - 工具系统: `src/core/tools/`
-- 示例代码: `examples/tools_*.py`
-- 测试代码: `tests/test_tools.py`
+- LLM 核心: `src/core/language_models.py`, `src/core/chat_model_factory.py`
+- 示例代码: `examples/tools_*.py`, `examples/llm_*.py`
+- 测试代码: `tests/test_tools.py`, `tests/test_llm.py`
 
 ---
 
@@ -115,9 +142,10 @@ docs/project/
 
 ### 🔄 版本信息
 
-- **文档版本**: 1.0.0
+- **文档版本**: 3.0.0
 - **最后更新**: 2026-01-13
 - **状态**: ✅ 当前
+- **重大更新**: LLM 核心模块重构完成，旧接口已完全移除
 
 ---
 
