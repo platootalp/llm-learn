@@ -5,6 +5,7 @@ Self-Discover - 大语言模型的自我发现推理框架
 2. Adapt - 将选中的模块适应到具体任务
 3. Implement - 使用适应后的推理结构解决问题
 """
+from __future__ import annotations
 
 import json
 import os
@@ -14,6 +15,9 @@ from typing import List, Dict, Any
 from dotenv import load_dotenv
 
 from core import QwenLLM
+# genAI_main_start
+from pattern.base_agent import BaseAgent
+# genAI_main_end
 
 # =========================
 # 原子推理模块库（40+ 个模块）
@@ -66,8 +70,8 @@ REASONING_MODULES = {
 # Select 组件
 # =========================
 class SelectComponent:
-    def __init__(self, llm_client: QwenLLM):
-        self.llm = llm_client
+    def __init__(self, agent: 'SelfDiscoverAgent'):
+        self.agent = agent
 
     def select(self, task: str) -> List[str]:
         modules_list = "\n".join([f"- {name}: {desc}" for name, desc in REASONING_MODULES.items()])
@@ -88,7 +92,7 @@ class SelectComponent:
             }}
         """
 
-        response = self.llm.think([{"role": "user", "content": prompt}]).strip()
+        response = self.agent.call_llm(prompt)
 
         try:
             json_match = self._extract_json(response)
@@ -111,8 +115,8 @@ class SelectComponent:
 # Adapt 组件
 # =========================
 class AdaptComponent:
-    def __init__(self, llm_client: QwenLLM):
-        self.llm = llm_client
+    def __init__(self, agent: 'SelfDiscoverAgent'):
+        self.agent = agent
 
     def adapt(self, task: str, selected_modules: List[str]) -> List[Dict[str, Any]]:
         print(f"\n[Adapt] 开始适应推理模块到任务...")
@@ -153,7 +157,7 @@ class AdaptComponent:
         """
 
         print(f"\n[Adapt] 正在生成推理结构...")
-        response = self.llm.think([{"role": "user", "content": prompt}]).strip()
+        response = self.agent.call_llm(prompt)
 
         try:
             json_match = self._extract_json(response)
@@ -191,8 +195,8 @@ class AdaptComponent:
 # Implement 组件
 # =========================
 class ImplementComponent:
-    def __init__(self, llm_client: QwenLLM):
-        self.llm = llm_client
+    def __init__(self, agent: 'SelfDiscoverAgent'):
+        self.agent = agent
 
     def implement(self, task: str, reasoning_structure: List[Dict[str, any]]) -> str:
         context = {
@@ -269,7 +273,7 @@ class ImplementComponent:
             请按照上述步骤进行推理，输出该阶段的推理结果。
         """
 
-        return self.llm.think([{"role": "user", "content": prompt}]).strip()
+        return self.agent.call_llm(prompt)
 
     def _generate_final_answer(self, task: str, context: Dict) -> str:
         reasoning_summary = "\n".join([
@@ -291,27 +295,25 @@ class ImplementComponent:
             3. 逻辑清晰
         """
 
-        return self.llm.think([{"role": "user", "content": prompt}]).strip()
+        return self.agent.call_llm(prompt)
 
 
 # =========================
 # SelfDiscover 组合 Agent
 # =========================
-class SelfDiscoverAgent:
+# genAI_main_start
+class SelfDiscoverAgent(BaseAgent):
     def __init__(self, llm_client: QwenLLM):
-        self.select = SelectComponent(llm_client)
-        self.adapt = AdaptComponent(llm_client)
-        self.implement = ImplementComponent(llm_client)
+        super().__init__(llm_client)
+        self.select = SelectComponent(self)
+        self.adapt = AdaptComponent(self)
+        self.implement = ImplementComponent(self)
 
     def run(self, task: str) -> str:
-        print("=" * 60)
-        print("Self-Discover Agent")
-        print("=" * 60)
+        self._print_section("Self-Discover Agent")
         print(f"\n任务: {task}\n")
 
-        print("=" * 60)
-        print("Stage 1: Select - 选择相关推理模块")
-        print("=" * 60)
+        self._print_section("Stage 1: Select - 选择相关推理模块")
         selected_modules = self.select.select(task)
         print(f"选中的模块: {', '.join(selected_modules)}")
 
@@ -319,26 +321,21 @@ class SelfDiscoverAgent:
             print("错误：未选中任何模块")
             return ""
 
-        print("\n" + "=" * 60)
-        print("Stage 2: Adapt - 适应推理模块到具体任务")
-        print("=" * 60)
+        self._print_section("Stage 2: Adapt - 适应推理模块到具体任务")
         reasoning_structure = self.adapt.adapt(task, selected_modules)
 
         if not reasoning_structure:
             print("错误：未生成推理结构")
             return ""
 
-        print("\n" + "=" * 60)
-        print("Stage 3: Implement - 执行推理结构")
-        print("=" * 60)
+        self._print_section("Stage 3: Implement - 执行推理结构")
         final_answer = self.implement.implement(task, reasoning_structure)
 
-        print("\n" + "=" * 60)
-        print("最终答案")
-        print("=" * 60)
+        self._print_section("最终答案")
         print(final_answer)
 
         return final_answer
+# genAI_main_end
 
 
 # =========================

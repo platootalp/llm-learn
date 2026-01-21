@@ -5,12 +5,17 @@ ReWOO Agent
 - 支持 LLM[...] 内部推理
 """
 
+from __future__ import annotations
+
 import os
 import re
 from typing import Dict, List, Tuple
 from dotenv import load_dotenv
 from core import QwenLLM
 from pattern.tools import ToolExecutor
+# genAI_main_start
+from pattern.base_agent import BaseAgent
+# genAI_main_end
 
 # =========================
 # Planner Prompt（动态工具 + 提取示例）
@@ -39,17 +44,16 @@ Plan: 用总体积除以注水速率，得到所需时间（分钟）。
 # Planner
 # =========================
 class ReWOOPlanner:
-    def __init__(self, llm_client: QwenLLM, tool_executor: ToolExecutor):
-        self.llm = llm_client
-        self.tool_executor = tool_executor
+    def __init__(self, agent: 'ReWOOAgent'):
+        self.agent = agent
 
     def generate_plan(self, task: str) -> List[Tuple[str, str, str, str]]:
-        tool_desc = self.tool_executor.get_tool_descriptions()
+        tool_desc = self.agent.get_tool_descriptions()
         prompt = PLANNER_PROMPT_BASE.format(
             tool_descriptions=tool_desc,
             task=task
         )
-        response = self.llm.think([{"role": "user", "content": prompt}]).strip()
+        response = self.agent.call_llm(prompt)
 
         # 匹配 Plan 和 #E（兼容 [...] 或 (...)）
         pattern = r"Plan:\s*(.+?)\s*(#E\d+)\s*=\s*(\w+)\s*[\[\(]([^\]\)]*)[\]\)]"
@@ -71,9 +75,8 @@ class ReWOOPlanner:
 # Worker（带 LLM 提取后处理）
 # =========================
 class ReWOOWorker:
-    def __init__(self, llm_client: QwenLLM, tool_executor: ToolExecutor):
-        self.llm_client = llm_client
-        self.tool_executor = tool_executor
+    def __init__(self, agent: 'ReWOOAgent'):
+        self.agent = agent
 
     def execute_plan(self, steps: List[Tuple[str, str, str, str]]) -> Dict[str, str]:
         evidence: Dict[str, str] = {}
@@ -81,9 +84,9 @@ class ReWOOWorker:
             resolved_arg = self._resolve_placeholders(raw_arg, evidence)
 
             if tool_name == "LLM":
-                evidence[var_name] = self.llm_client.think([{"role": "user", "content": resolved_arg}]).strip()
+                evidence[var_name] = self.agent.call_llm(resolved_arg)
             else:
-                evidence[var_name] = self.tool_executor.execute_tool(tool_name, resolved_arg)
+                evidence[var_name] = self.agent.execute_tool(tool_name, resolved_arg)
         return evidence
 
     def _resolve_placeholders(self, text: str, evidence: Dict[str, str]) -> str:
@@ -110,8 +113,8 @@ SOLVER_PROMPT_TEMPLATE = """
 
 
 class ReWOOSolver:
-    def __init__(self, llm_client: QwenLLM):
-        self.llm = llm_client
+    def __init__(self, agent: 'ReWOOAgent'):
+        self.agent = agent
 
     def solve(self, task: str, steps: List[Tuple], evidence: Dict[str, str]) -> str:
         plan_lines = []
@@ -125,7 +128,7 @@ class ReWOOSolver:
             full_plan_with_evidence=full_plan,
             task=task
         )
-        return self.llm.think([{"role": "user", "content": prompt}]).strip()
+        return self.agent.call_llm(prompt)
 
     def _resolve_placeholders(self, text: str, evidence: Dict[str, str]) -> str:
         def replacer(match):
@@ -138,11 +141,14 @@ class ReWOOSolver:
 # =========================
 # ReWOO Agent
 # =========================
-class ReWOOAgent:
+# genAI_main_start
+class ReWOOAgent(BaseAgent):
     def __init__(self, llm_client: QwenLLM, tool_executor: ToolExecutor):
-        self.planner = ReWOOPlanner(llm_client, tool_executor)
-        self.worker = ReWOOWorker(llm_client, tool_executor)
-        self.solver = ReWOOSolver(llm_client)
+        super().__init__(llm_client, tool_executor)
+        self.planner = ReWOOPlanner(self)
+        self.worker = ReWOOWorker(self)
+        self.solver = ReWOOSolver(self)
+# genAI_main_end
 
     def run(self, task: str) -> str:
         print("=== Step 1: Planner ===")
@@ -160,7 +166,7 @@ class ReWOOAgent:
 
         print("\n=== Step 3: Solver ===")
         final_answer = self.solver.solve(task, steps, evidence)
-        print(f"\n--- Final Answer ---\n{final_answer}")
+        self._print_final_answer(final_answer)
         return final_answer
 
 

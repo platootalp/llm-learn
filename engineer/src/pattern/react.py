@@ -10,23 +10,27 @@ from typing import Dict, Callable, List, Optional, Tuple
 from dotenv import load_dotenv
 from core import QwenLLM
 from pattern.tools import ToolExecutor
+# genAI_main_start
+from pattern.base_agent import BaseAgent
+# genAI_main_end
 
 
 # =========================
 # ReAct Agent
 # =========================
-class ReActAgent:
+# genAI_main_start
+class ReActAgent(BaseAgent):
     def __init__(
             self,
             llm: QwenLLM,
             tool_executor: ToolExecutor,
             max_steps: int = 5
     ):
-        self.llm = llm
-        self.tool_executor = tool_executor
+        super().__init__(llm, tool_executor)
         self.max_steps = max_steps
 
-    def run(self, question: str) -> Optional[str]:
+    def run(self, question: str) -> str:
+# genAI_main_end
         history: List[Dict[str, str]] = []  # 结构化历史：[{"thought": ..., "action": ..., "observation": ...}]
 
         for step in range(1, self.max_steps + 1):
@@ -37,13 +41,13 @@ class ReActAgent:
             )
 
             prompt = REACT_PROMPT_TEMPLATE.format(
-                tools=self.tool_executor.get_tool_descriptions(),
+                tools=self.get_tool_descriptions(),
                 question=question,
                 history=history_str
             )
 
-            print(f"\n--- Step {step} ---")
-            response = self.llm.think([{"role": "user", "content": prompt}])
+            self._print_step(step, self.max_steps, f"Step {step}")
+            response = self.call_llm(prompt, strip=False)
             if not response:
                 print("LLM returned empty response.")
                 break
@@ -66,7 +70,7 @@ class ReActAgent:
             if not tool_name:
                 observation = f"Invalid action format: {action}"
             else:
-                observation = self.tool_executor.execute_tool(tool_name, tool_input)
+                observation = self.execute_tool(tool_name, tool_input)
             print(f"Observation: {observation}")
 
             history.append({
@@ -76,7 +80,9 @@ class ReActAgent:
             })
 
         print("Maximum steps reached.")
-        return None
+        # genAI_main_start
+        return "无法在最大步数内完成任务"
+        # genAI_main_end
 
     def _parse_llm_output(self, text: str) -> Tuple[Optional[str], Optional[str]]:
         thought_match = re.search(r"Thought:\s*(.*?)(?=\n)", text, re.DOTALL)

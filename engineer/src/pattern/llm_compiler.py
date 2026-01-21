@@ -5,6 +5,8 @@ LLMCompiler - 通过 DAG 实现工具调用的并行编排
 2. Task Fetching Unit - 并行调度就绪任务
 3. Joining Unit - 结果聚合
 """
+from __future__ import annotations
+
 import os
 import asyncio
 import re
@@ -14,6 +16,9 @@ from typing import Dict, List, Set, Any, Optional, Tuple
 from dataclasses import dataclass, field
 from core import QwenLLM
 from pattern.tools import ToolExecutor
+# genAI_main_start
+from pattern.base_agent import BaseAgent
+# genAI_main_end
 
 
 @dataclass
@@ -115,19 +120,18 @@ class FunctionCallingPlanner:
         请严格按照上述 JSON 格式输出，不要包含其他内容。
     """
 
-    def __init__(self, llm_client: QwenLLM, tool_executor: ToolExecutor):
-        self.llm = llm_client
-        self.tool_executor = tool_executor
+    def __init__(self, agent: 'LLMCompilerAgent'):
+        self.agent = agent
 
     def generate_plan(self, task: str) -> DAG:
         """生成 DAG 执行计划"""
-        tool_desc = self.tool_executor.get_tool_descriptions()
+        tool_desc = self.agent.get_tool_descriptions()
         prompt = self.PLANNER_PROMPT.format(
             tool_descriptions=tool_desc,
             task=task
         )
 
-        response = self.llm.think([{"role": "user", "content": prompt}]).strip()
+        response = self.agent.call_llm(prompt)
 
         try:
             plan_data = self._parse_response(response)
@@ -171,9 +175,8 @@ class FunctionCallingPlanner:
 class TaskFetchingUnit:
     """Task Fetching Unit - 并行调度就绪任务"""
 
-    def __init__(self, tool_executor: ToolExecutor, llm_client: QwenLLM):
-        self.tool_executor = tool_executor
-        self.llm = llm_client
+    def __init__(self, agent: 'LLMCompilerAgent'):
+        self.agent = agent
 
     async def execute_task(self, node: TaskNode, dag: DAG) -> str:
         """执行单个任务"""
@@ -183,9 +186,9 @@ class TaskFetchingUnit:
 
         try:
             if node.tool_name == "LLM":
-                result = self.llm.think([{"role": "user", "content": resolved_args}]).strip()
+                result = self.agent.call_llm(resolved_args)
             else:
-                result = self.tool_executor.execute_tool(node.tool_name, resolved_args)
+                result = self.agent.execute_tool(node.tool_name, resolved_args)
 
             node.result = result
             node.status = "completed"
@@ -259,8 +262,8 @@ class JoiningUnit:
         请基于上述执行结果回答问题，仅输出最终答案。
     """
 
-    def __init__(self, llm_client: QwenLLM):
-        self.llm = llm_client
+    def __init__(self, agent: 'LLMCompilerAgent'):
+        self.agent = agent
 
     def generate_final_answer(self, task: str, dag: DAG) -> str:
         """生成最终答案"""
@@ -271,7 +274,7 @@ class JoiningUnit:
             execution_summary=execution_summary
         )
 
-        return self.llm.think([{"role": "user", "content": prompt}]).strip()
+        return self.agent.call_llm(prompt)
 
     def _build_execution_summary(self, dag: DAG) -> str:
         """构建执行摘要"""
@@ -286,13 +289,16 @@ class JoiningUnit:
         return "\n".join(lines)
 
 
-class LLMCompilerAgent:
+# genAI_main_start
+class LLMCompilerAgent(BaseAgent):
     """LLMCompilerAgent 主类 - 协调三个核心组件"""
 
     def __init__(self, llm_client: QwenLLM, tool_executor: ToolExecutor):
-        self.planner = FunctionCallingPlanner(llm_client, tool_executor)
-        self.task_fetcher = TaskFetchingUnit(tool_executor, llm_client)
-        self.joiner = JoiningUnit(llm_client)
+        super().__init__(llm_client, tool_executor)
+        self.planner = FunctionCallingPlanner(self)
+        self.task_fetcher = TaskFetchingUnit(self)
+        self.joiner = JoiningUnit(self)
+# genAI_main_end
 
     def run(self, task: str) -> str:
         """执行 LLMCompiler 流程"""
@@ -306,7 +312,7 @@ class LLMCompilerAgent:
 
         print("\n=== Step 3: Joining Unit (结果聚合) ===")
         final_answer = self.joiner.generate_final_answer(task, dag)
-        print(f"\n--- Final Answer ---\n{final_answer}")
+        self._print_final_answer(final_answer)
 
         return final_answer
 

@@ -5,9 +5,14 @@ Reflection Agent 示例实现（职责分离版 + 提示词适配）
 - ReflectionAgent: 协调反思循环
 """
 
+from __future__ import annotations
+
 import os
 from dotenv import load_dotenv
 from core import QwenLLM
+# genAI_main_start
+from pattern.base_agent import BaseAgent
+# genAI_main_end
 
 INITIAL_PROMPT = """
 你是一位资深的Python程序员。请根据以下要求，编写一个Python函数。
@@ -38,12 +43,12 @@ REFINE_PROMPT = """
 # 1. Generator: 生成器
 # =========================
 class Generator:
-    def __init__(self, llm_client: QwenLLM):
-        self.llm = llm_client
+    def __init__(self, agent: 'ReflectionAgent'):
+        self.agent = agent
 
     def generate_initial(self, question: str) -> str:
         prompt = INITIAL_PROMPT.format(question=question)
-        return self.llm.think([{"role": "user", "content": prompt}]).strip()
+        return self.agent.call_llm(prompt)
 
     def refine(self, question: str, current_answer: str, reflection: str) -> str:
         prompt = REFINE_PROMPT.format(
@@ -51,7 +56,7 @@ class Generator:
             answer=current_answer,
             reflection=reflection
         )
-        return self.llm.think([{"role": "user", "content": prompt}]).strip()
+        return self.agent.call_llm(prompt)
 
 
 REFLECTION_PROMPT = """
@@ -78,25 +83,28 @@ REFLECTION_PROMPT = """
 # 2. Reflector: 反思器
 # =========================
 class Reflector:
-    def __init__(self, llm_client: QwenLLM):
-        self.llm = llm_client
+    def __init__(self, agent: 'ReflectionAgent'):
+        self.agent = agent
 
     def reflect(self, question: str, answer: str) -> str:
         prompt = REFLECTION_PROMPT.format(
             question=question,
             answer=answer
         )
-        return self.llm.think([{"role": "user", "content": prompt}]).strip()
+        return self.agent.call_llm(prompt)
 
 
 # =========================
 # 3. ReflectionAgent
 # =========================
-class ReflectionAgent:
+# genAI_main_start
+class ReflectionAgent(BaseAgent):
     def __init__(self, llm_client: QwenLLM, max_reflections: int = 3):
-        self.generator = Generator(llm_client)
-        self.reflector = Reflector(llm_client)
+        super().__init__(llm_client)
         self.max_reflections = max_reflections
+        self.generator = Generator(self)
+        self.reflector = Reflector(self)
+# genAI_main_end
 
     def _should_continue_reflection(self, reflection: str) -> bool:
         """
@@ -125,12 +133,8 @@ class ReflectionAgent:
             current_answer = self.generator.refine(question, current_answer, reflection)
             self._print_stage(f"改进答案 #{i + 1}", current_answer)
 
-        self._print_stage("最终答案", current_answer)
+        self._print_final_answer(current_answer)
         return current_answer
-
-    def _print_stage(self, title: str, content: str):
-        print(f"\n--- {title} ---")
-        print(content)
 
 
 # =========================

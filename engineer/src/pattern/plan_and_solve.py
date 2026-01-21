@@ -12,6 +12,9 @@ import ast
 from typing import List, Dict, Optional
 from dotenv import load_dotenv
 from core import QwenLLM
+# genAI_main_start
+from pattern.base_agent import BaseAgent
+# genAI_main_end
 
 # =========================
 # 提示模板
@@ -108,12 +111,12 @@ class ExecutionState:
 # 2. Planner: 规划器
 # =========================
 class Planner:
-    def __init__(self, llm_client: QwenLLM):
-        self.llm = llm_client
+    def __init__(self, agent: 'PlanSolveAgent'):
+        self.agent = agent
 
     def generate_plan(self, question: str) -> List[str]:
         prompt = PLANNER_PROMPT_TEMPLATE.format(question=question)
-        response = self.llm.think([{"role": "user", "content": prompt}])
+        response = self.agent.call_llm(prompt, strip=False)
         plan = self._parse_plan(response)
         if not plan:
             raise ValueError("规划失败：未能生成有效计划。")
@@ -137,8 +140,8 @@ class Planner:
 # 3. Executor: 执行器
 # =========================
 class Executor:
-    def __init__(self, llm_client: QwenLLM):
-        self.llm = llm_client
+    def __init__(self, agent: 'PlanSolveAgent'):
+        self.agent = agent
 
     def execute_step(self, question: str, state: ExecutionState) -> str:
         current_step = state.get_current_step()
@@ -152,7 +155,7 @@ class Executor:
             current_step=current_step
         )
 
-        result = self.llm.think([{"role": "user", "content": prompt}]).strip()
+        result = self.agent.call_llm(prompt)
         return result if result else "[空结果]"
 
     def generate_final_answer(self, question: str, state: ExecutionState) -> str:
@@ -160,16 +163,19 @@ class Executor:
             question=question,
             execution_summary=state.get_execution_summary()
         )
-        return self.llm.think([{"role": "user", "content": prompt}]).strip()
+        return self.agent.call_llm(prompt)
 
 
 # =========================
 # 4. PlanSolveAgent: 协调器
 # =========================
-class PlanSolveAgent:
+# genAI_main_start
+class PlanSolveAgent(BaseAgent):
     def __init__(self, llm_client: QwenLLM):
-        self.planner = Planner(llm_client)
-        self.executor = Executor(llm_client)
+        super().__init__(llm_client)
+        self.planner = Planner(self)
+        self.executor = Executor(self)
+# genAI_main_end
 
     def run(self, question: str) -> str:
         # 1. 规划
@@ -185,17 +191,11 @@ class PlanSolveAgent:
 
         # 3. 合成最终答案
         final_answer = self.executor.generate_final_answer(question, state)
-        print(f"\n--- 最终答案 ---\n{final_answer}")
+        self._print_final_answer(final_answer)
         return final_answer
 
     def _print_plan(self, plan: List[str]):
-        print(f"\n--- 生成的计划 ---")
-        for i, step in enumerate(plan, 1):
-            print(f"{i}. {step}")
-
-    def _print_step(self, step_num: int, total: int, step_desc: str, result: str):
-        print(f"\n--- 执行步骤 [{step_num}/{total}]: {step_desc} ---")
-        print(f"结果: {result}")
+        self._print_stage("生成的计划", "\n".join(f"{i}. {step}" for i, step in enumerate(plan, 1)))
 
 
 # =========================
